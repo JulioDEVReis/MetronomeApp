@@ -4,50 +4,54 @@ App web de metrônomo com músicas (BPM), playlists e player para uso em shows.
 
 ## Estrutura
 
-- **`Client/`** — React + Vite (frontend).
-- **`Server/`** — API Express + Prisma + SQLite (`DATABASE_URL`).
+- **`Client/`** — React + Vite (frontend estático).
+- **`Server/`** — API Express + Prisma (PostgreSQL).
+- **`api/index.ts`** — entrada **serverless** na Vercel (a mesma app Express, sem `listen`).
 
-## Colocar o frontend na Vercel (GitHub)
+## Deploy só na Vercel (site + API no mesmo projeto)
 
-1. Crie um repositório no GitHub e envie este código (`git push`).
-2. Na [Vercel](https://vercel.com), **Add New Project** → importe o repositório.
-3. Em **Root Directory**, escolha **`Client`** (importante: o build do Vite fica aí).
-4. Variáveis de ambiente (Build / Production):
-   - **`VITE_API_URL`** — URL pública da sua API **sem** barra no final.  
-     Exemplo: `https://metronome-api.onrender.com`  
-     Em branco, o app assume `/api` no mesmo host (útil só em dev com proxy do Vite).
-5. Deploy. O site usará `VITE_API_URL` nas chamadas `fetch` (definido no build).
+Na Vercel, o frontend e as rotas `/api/*` podem ficar **no mesmo domínio**:
 
-## API em produção (recomendado junto com a Vercel)
+1. O repositório deve ser o **root** do projeto na Vercel (não uses “Root Directory” = `Client`; deixa a raiz do repo).
+2. O ficheiro **`vercel.json`** na raiz já define:
+   - build do `Client` para `Client/dist`;
+   - `rewrites` de `/api/:path*` para a função **`api/index.ts`**.
+3. **Base de dados**: em serverless **não** se usa SQLite em ficheiro de forma fiável. Usa **PostgreSQL**. Na Vercel podes ligar **Vercel Postgres** (Storage → Postgres) ao projeto; isso cria a variável **`DATABASE_URL`** automaticamente.
+4. No primeiro deploy, o comando **`vercel-build`** corre `prisma migrate deploy` no `Server/` (precisa de **`DATABASE_URL`** já definida antes do build).
+5. No **Client**, deixa **`VITE_API_URL` vazio** (ou não definas): o browser chama **`/api/...`** no mesmo domínio da Vercel.
 
-A Vercel serve o **site estático** do `Client`. A API em **`Server/`** precisa rodar noutro serviço (ex.: [Render](https://render.com), Railway, Fly.io), porque usa Node + Prisma + ficheiro SQLite (disco).
+### Resumo das variáveis na Vercel
 
-No host da API:
+| Variável | Obrigatório | Notas |
+|----------|-------------|--------|
+| `DATABASE_URL` | Sim | Vem do Vercel Postgres (ou outra URL Postgres compatível). |
+| `VITE_API_URL` | Não | Vazio = API no mesmo host (`/api`). |
 
-1. **Root** do serviço: pasta **`Server/`**.
-2. **Build command** (exemplo):  
-   `npm ci && npm run db:deploy && npm run build`
-3. **Start command**:  
-   `npm start`
-4. Variável **`DATABASE_URL`**: no primeiro deploy pode usar  
-   `file:./prod.db`  
-   se o plano tiver **disco persistente**; para escalonar depois, use **PostgreSQL** e ajuste o `provider` no `prisma/schema.prisma`.
-5. **`PORT`**: a maioria das plataformas define automaticamente; o servidor já usa `process.env.PORT`.
+### GitHub
 
-**CORS:** a API já usa `cors({ origin: true })`, aceitando pedidos a partir do domínio da Vercel.
+Cria o repositório, faz push, importa na Vercel e liga o **Postgres** ao projeto antes de confiar no primeiro build com migrações.
 
 ## Desenvolvimento local
 
-Terminal 1 — API (`http://localhost:3001`):
+### 1) PostgreSQL com Docker
+
+Na raiz do repo:
+
+```bash
+docker compose up -d
+```
+
+### 2) API
 
 ```bash
 cd Server
-cp .env.example .env   # se ainda não existir
+cp .env.example .env
 npm install
+npx prisma migrate deploy
 npm run dev
 ```
 
-Terminal 2 — Web (`http://localhost:5173`):
+### 3) Web
 
 ```bash
 cd Client
@@ -55,4 +59,12 @@ npm install
 npm run dev
 ```
 
-O Vite encaminha `/api` para `localhost:3001` (ver `Client/vite.config.ts`).
+O Vite encaminha `/api` para `http://localhost:3001` (ver `Client/vite.config.ts`).
+
+### Prisma em funções serverless
+
+O `schema.prisma` inclui `binaryTargets` com `rhel-openssl-3.0.x` para o runtime da Vercel. Em URLs Postgres com **PgBouncer** (comum em serviços geridos), segue a documentação do teu provider (por vezes `?pgbouncer=true&connection_limit=1`).
+
+## Migração a partir da versão antiga (SQLite)
+
+Quem tinha dados em `Server/dev.db` (SQLite) precisa de **exportar e voltar a inserir** na Postgres ou fazer um script de migração à parte; o schema em Postgres é o mesmo modelo, mas a base é nova.
