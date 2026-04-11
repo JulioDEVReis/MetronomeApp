@@ -1,0 +1,31 @@
+# Dependências e build
+node_modules/
+**/node_modules/
+**/dist/
+**/dist-ssr/
+
+# Ambiente e segredos
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+
+# Banco local (não versionar)
+Server/dev.db
+Server/dev.db-journal
+*.db
+*.db-journal
+
+# Logs e SO
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Prisma (legado / gerado fora do default)
+Server/generated/

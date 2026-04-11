@@ -1,0 +1,23 @@
+ .topbar{
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display:flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(16, 20, 28, 0.9);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.topbar__title{
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.topbar__subtitle{
+  opacity: 0.7;
+  font-size: 12px;
+}
