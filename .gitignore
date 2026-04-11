@@ -7,9 +7,10 @@ node_modules/
 # Ambiente e segredos
 .env
 .env.*
-!.env.example
 **/.env
 **/.env.*
+!.env.example
+!**/.env.example
 
 # Banco local (não versionar)
 Server/dev.db
