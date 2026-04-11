@@ -16,12 +16,6 @@ npm install
 npm run dev
 ```
 
-## Deploy na Vercel
-
-1. Importa o repositório na Vercel.
-2. Define **Root Directory** como **`Client`**.
-3. Não precisas de variáveis de ambiente nem de Postgres.
-
 ## Nota
 
 Os dados **não** sincronizam entre dispositivos sozinhos: usa **Exportar JSON** noutro telemóvel ou após limpar dados do browser.
