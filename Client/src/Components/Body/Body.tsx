@@ -1,5 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Api, type Playlist, type PlaylistItem, type Song } from "../../api"
+import {
+  type AppData,
+  type Playlist,
+  type PlaylistItem,
+  type RawPlaylistItem,
+  type RawPlaylist,
+  type Song,
+  downloadBlob,
+  exportJsonBlob,
+  exportSongsCsv,
+  loadData,
+  newId,
+  parseImportedJson,
+  parseSongsCsv,
+  resolvePlaylist,
+  saveData,
+} from "../../localStore"
 
 function clampInt(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, Math.trunc(n)))
@@ -78,11 +94,16 @@ async function safeFullscreenExit() {
   if (document.exitFullscreen) await document.exitFullscreen()
 }
 
+function toAppData(songs: Song[], playlists: RawPlaylist[]): AppData {
+  return { version: 1, songs, playlists }
+}
+
 const Body = () => {
   const [songs, setSongs] = useState<Song[]>([])
-  const [playlists, setPlaylists] = useState<Array<{ id: string; name: string; count: number }>>([])
+  const [playlists, setPlaylists] = useState<RawPlaylist[]>([])
+  const [hydrated, setHydrated] = useState(false)
+
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>("")
-  const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | null>(null)
 
   const [songName, setSongName] = useState("")
   const [songBpm, setSongBpm] = useState(120)
@@ -98,6 +119,33 @@ const Body = () => {
 
   const [error, setError] = useState<string>("")
 
+  const importJsonRef = useRef<HTMLInputElement>(null)
+  const importCsvRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const d = loadData()
+    setSongs(d.songs)
+    setPlaylists(d.playlists)
+    setHydrated(true)
+  }, [])
+
+  useEffect(() => {
+    if (!hydrated) return
+    saveData(toAppData(songs, playlists))
+  }, [songs, playlists, hydrated])
+
+  const playlistsMeta = useMemo(
+    () => playlists.map((p) => ({ id: p.id, name: p.name, count: p.items.length })),
+    [playlists],
+  )
+
+  const selectedPlaylist: Playlist | null = useMemo(() => {
+    if (!selectedPlaylistId) return null
+    const raw = playlists.find((p) => p.id === selectedPlaylistId)
+    if (!raw) return null
+    return resolvePlaylist(raw, songs)
+  }, [selectedPlaylistId, playlists, songs])
+
   const currentItem: PlaylistItem | null = useMemo(() => {
     const items = selectedPlaylist?.items ?? []
     return items.length ? items[Math.min(currentIndex, items.length - 1)] : null
@@ -107,50 +155,13 @@ const Body = () => {
   const { beatOn } = useMetronome({ bpm: currentBpm, enabled: isPlaying && !!currentItem, soundEnabled })
 
   useEffect(() => {
-    let alive = true
-    ;(async () => {
-      try {
-        setError("")
-        const [s, p] = await Promise.all([Api.listSongs(), Api.listPlaylists()])
-        if (!alive) return
-        setSongs(s)
-        setPlaylists(p.map((x) => ({ id: x.id, name: x.name, count: x._count?.items ?? 0 })))
-      } catch (e: any) {
-        if (!alive) return
-        setError(e?.message ?? "Erro ao carregar dados.")
-      }
-    })()
-    return () => {
-      alive = false
-    }
-  }, [])
-
-  useEffect(() => {
     if (!selectedPlaylistId) {
-      setSelectedPlaylist(null)
       setCurrentIndex(0)
       setIsPlaying(false)
       return
     }
-
-    let alive = true
-    ;(async () => {
-      try {
-        setError("")
-        const pl = await Api.getPlaylist(selectedPlaylistId)
-        if (!alive) return
-        setSelectedPlaylist(pl)
-        setCurrentIndex(0)
-        setIsPlaying(false)
-      } catch (e: any) {
-        if (!alive) return
-        setError(e?.message ?? "Erro ao carregar playlist.")
-      }
-    })()
-
-    return () => {
-      alive = false
-    }
+    setCurrentIndex(0)
+    setIsPlaying(false)
   }, [selectedPlaylistId])
 
   useEffect(() => {
@@ -162,101 +173,93 @@ const Body = () => {
     return () => document.removeEventListener("fullscreenchange", onFs)
   }, [])
 
-  async function refreshSongs() {
-    const s = await Api.listSongs()
-    setSongs(s)
+  function setPlaylistById(id: string, fn: (pl: RawPlaylist) => RawPlaylist) {
+    setPlaylists((prev) => prev.map((p) => (p.id === id ? fn(p) : p)))
   }
 
-  async function refreshPlaylistsList() {
-    const p = await Api.listPlaylists()
-    setPlaylists(p.map((x) => ({ id: x.id, name: x.name, count: x._count?.items ?? 0 })))
-  }
-
-  async function refreshSelectedPlaylist() {
-    if (!selectedPlaylistId) return
-    const pl = await Api.getPlaylist(selectedPlaylistId)
-    setSelectedPlaylist(pl)
-  }
-
-  async function onAddSong() {
-    try {
-      setError("")
-      const bpm = clampInt(Number(songBpm), 20, 300)
-      await Api.createSong({ name: songName.trim(), bpm })
-      setSongName("")
-      setSongBpm(120)
-      await refreshSongs()
-    } catch (e: any) {
-      setError(e?.message ?? "Erro ao criar música.")
+  function onAddSong() {
+    setError("")
+    const name = songName.trim()
+    if (!name) return
+    if (songs.some((s) => s.name.toLowerCase() === name.toLowerCase())) {
+      setError("Já existe uma música com esse nome.")
+      return
     }
+    const bpm = clampInt(Number(songBpm), 20, 300)
+    setSongs((s) => [...s, { id: newId(), name, bpm }])
+    setSongName("")
+    setSongBpm(120)
   }
 
-  async function onDeleteSong(id: string) {
-    try {
-      setError("")
-      await Api.deleteSong(id)
-      await refreshSongs()
-      await refreshSelectedPlaylist()
-    } catch (e: any) {
-      setError(e?.message ?? "Erro ao apagar música.")
+  function onDeleteSong(id: string) {
+    setError("")
+    setSongs((s) => s.filter((x) => x.id !== id))
+    setPlaylists((pls) =>
+      pls.map((p) => ({
+        ...p,
+        items: p.items
+          .filter((it: RawPlaylistItem) => it.songId !== id)
+          .map((it: RawPlaylistItem, idx: number) => ({ ...it, position: idx + 1 })),
+      })),
+    )
+  }
+
+  function onCreatePlaylist() {
+    setError("")
+    const name = playlistName.trim()
+    if (!name) return
+    if (playlists.some((p) => p.name.toLowerCase() === name.toLowerCase())) {
+      setError("Já existe uma playlist com esse nome.")
+      return
     }
+    const id = newId()
+    setPlaylists((p) => [...p, { id, name, items: [] }])
+    setPlaylistName("")
+    setSelectedPlaylistId(id)
   }
 
-  async function onCreatePlaylist() {
-    try {
-      setError("")
-      const pl = await Api.createPlaylist({ name: playlistName.trim() })
-      setPlaylistName("")
-      await refreshPlaylistsList()
-      setSelectedPlaylistId(pl.id)
-    } catch (e: any) {
-      setError(e?.message ?? "Erro ao criar playlist.")
-    }
-  }
-
-  async function onAddToPlaylist() {
+  function onAddToPlaylist() {
     if (!selectedPlaylistId || !addSongId) return
-    try {
-      setError("")
-      await Api.addPlaylistItem(selectedPlaylistId, { songId: addSongId })
-      setAddSongId("")
-      await refreshSelectedPlaylist()
-      await refreshPlaylistsList()
-    } catch (e: any) {
-      setError(e?.message ?? "Erro ao adicionar na playlist.")
-    }
+    setError("")
+    setPlaylistById(selectedPlaylistId, (pl) => {
+      const nextPos = (pl.items.reduce((m: number, it: RawPlaylistItem) => Math.max(m, it.position), 0) || 0) + 1
+      return {
+        ...pl,
+        items: [...pl.items, { id: newId(), position: nextPos, songId: addSongId }],
+      }
+    })
+    setAddSongId("")
   }
 
-  async function onRemoveItem(itemId: string) {
+  function onRemoveItem(itemId: string) {
     if (!selectedPlaylistId) return
-    try {
-      setError("")
-      await Api.deletePlaylistItem(selectedPlaylistId, itemId)
-      await refreshSelectedPlaylist()
-      await refreshPlaylistsList()
-      setCurrentIndex(0)
-      setIsPlaying(false)
-    } catch (e: any) {
-      setError(e?.message ?? "Erro ao remover item.")
-    }
+    setError("")
+    setPlaylistById(selectedPlaylistId, (pl) => {
+      const remaining = pl.items
+        .filter((it: RawPlaylistItem) => it.id !== itemId)
+        .sort((a: RawPlaylistItem, b: RawPlaylistItem) => a.position - b.position)
+      return {
+        ...pl,
+        items: remaining.map((it: RawPlaylistItem, idx: number) => ({ ...it, position: idx + 1 })),
+      }
+    })
+    setCurrentIndex(0)
+    setIsPlaying(false)
   }
 
-  async function persistOrder(newItems: PlaylistItem[]) {
+  function persistOrder(newItems: PlaylistItem[]) {
     if (!selectedPlaylistId) return
-    try {
-      setError("")
-      const updated = await Api.reorderPlaylistItems(
-        selectedPlaylistId,
-        newItems.map((x) => x.id),
-      )
-      setSelectedPlaylist(updated)
-    } catch (e: any) {
-      setError(e?.message ?? "Erro ao reordenar a playlist.")
-      await refreshSelectedPlaylist()
-    }
+    setPlaylistById(selectedPlaylistId, (pl) => ({
+      ...pl,
+      items: newItems.map((it, idx) => ({
+        id: it.id,
+        position: idx + 1,
+        songId: it.song.id,
+      })),
+    }))
   }
 
-  async function moveItem(from: number, to: number) {
+  function moveItem(from: number, to: number) {
     const items = [...(selectedPlaylist?.items ?? [])]
     if (!items.length) return
     if (from < 0 || from >= items.length) return
@@ -264,14 +267,13 @@ const Body = () => {
     const [it] = items.splice(from, 1)
     if (!it) return
     items.splice(to, 0, it)
-    if (selectedPlaylist) setSelectedPlaylist({ ...selectedPlaylist, items })
+    persistOrder(items)
     setCurrentIndex((idx) => {
       if (idx === from) return to
       if (from < idx && idx <= to) return idx - 1
       if (to <= idx && idx < from) return idx + 1
       return idx
     })
-    await persistOrder(items)
   }
 
   function prev() {
@@ -296,10 +298,104 @@ const Body = () => {
     }
   }
 
+  function onExportJson() {
+    setError("")
+    downloadBlob(exportJsonBlob(toAppData(songs, playlists)), "metronome-dados.json")
+  }
+
+  function onExportCsv() {
+    setError("")
+    downloadBlob(exportSongsCsv(songs), "metronome-musicas.csv")
+  }
+
+  function onImportJsonFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ""
+    if (!file) return
+    setError("")
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const text = String(reader.result ?? "")
+        const data = parseImportedJson(text)
+        setSongs(data.songs)
+        setPlaylists(data.playlists)
+        setSelectedPlaylistId("")
+        setCurrentIndex(0)
+        setIsPlaying(false)
+      } catch (err: any) {
+        setError(err?.message ?? "Erro ao importar JSON.")
+      }
+    }
+    reader.readAsText(file)
+  }
+
+  function onImportCsvFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ""
+    if (!file) return
+    setError("")
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const text = String(reader.result ?? "")
+        const imported = parseSongsCsv(text)
+        if (!imported.length) {
+          setError("Nenhuma música encontrada no CSV.")
+          return
+        }
+        setSongs((prev) => {
+          const byName = new Map(prev.map((s) => [s.name.toLowerCase(), s]))
+          for (const s of imported) {
+            byName.set(s.name.toLowerCase(), s)
+          }
+          return Array.from(byName.values()).sort((a, b) => a.name.localeCompare(b.name))
+        })
+      } catch (err: any) {
+        setError(err?.message ?? "Erro ao importar CSV.")
+      }
+    }
+    reader.readAsText(file)
+  }
+
   const playerDisabled = !currentItem
 
   const main = (
     <div className="container">
+      <section className="card" style={{ marginBottom: 16 }}>
+        <div className="row row--between">
+          <strong>Backup (JSON / Excel CSV)</strong>
+          <span className="pill">só neste dispositivo</span>
+        </div>
+        <p style={{ margin: "10px 0 0", opacity: 0.75, fontSize: 13, lineHeight: 1.45 }}>
+          Os dados ficam no telemóvel ou browser (<strong>localStorage</strong>). Exporta um ficheiro para guardar no
+          telemóvel ou na cloud; importa para restaurar ou juntar músicas a partir de uma folha CSV (<code>Nome;BPM</code>
+          , abre no Excel).
+        </p>
+        <div className="row" style={{ marginTop: 12 }}>
+          <button type="button" className="btn btn--primary" onClick={onExportJson}>
+            Exportar JSON
+          </button>
+          <button type="button" className="btn" onClick={() => importJsonRef.current?.click()}>
+            Importar JSON
+          </button>
+          <input
+            ref={importJsonRef}
+            type="file"
+            accept="application/json,.json"
+            style={{ display: "none" }}
+            onChange={onImportJsonFile}
+          />
+          <button type="button" className="btn" onClick={onExportCsv}>
+            Exportar músicas CSV
+          </button>
+          <button type="button" className="btn" onClick={() => importCsvRef.current?.click()}>
+            Importar músicas CSV
+          </button>
+          <input ref={importCsvRef} type="file" accept=".csv,text/csv" style={{ display: "none" }} onChange={onImportCsvFile} />
+        </div>
+      </section>
+
       <div className="grid">
         <section className="card">
           <div className="row row--between">
@@ -348,7 +444,7 @@ const Body = () => {
         <section className="card">
           <div className="row row--between">
             <strong>Playlists</strong>
-            <span className="pill mono">{playlists.length}</span>
+            <span className="pill mono">{playlistsMeta.length}</span>
           </div>
 
           <div className="row" style={{ marginTop: 12 }}>
@@ -366,7 +462,7 @@ const Body = () => {
               <div className="label">Selecionar playlist</div>
               <select value={selectedPlaylistId} onChange={(e) => setSelectedPlaylistId(e.target.value)}>
                 <option value="">—</option>
-                {playlists.map((p) => (
+                {playlistsMeta.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name} ({p.count})
                   </option>
@@ -413,12 +509,12 @@ const Body = () => {
                     </div>
                   </div>
                   <div className="row">
-                    <button className="btn" onClick={() => void moveItem(idx, idx - 1)} disabled={idx === 0}>
+                    <button className="btn" onClick={() => moveItem(idx, idx - 1)} disabled={idx === 0}>
                       ↑
                     </button>
                     <button
                       className="btn"
-                      onClick={() => void moveItem(idx, idx + 1)}
+                      onClick={() => moveItem(idx, idx + 1)}
                       disabled={idx >= ((selectedPlaylist?.items?.length ?? 1) - 1)}
                     >
                       ↓
@@ -497,9 +593,7 @@ const Body = () => {
 
   return (
     <div className="fullscreen" role="application" aria-label="Metronomo em tela cheia">
-      <div className={["fullscreen__stage", beatOn ? "fullscreen__stage--on" : ""].join(" ")}>
-        {/* Mantemos vazio para piscar “a tela inteira” */}
-      </div>
+      <div className={["fullscreen__stage", beatOn ? "fullscreen__stage--on" : ""].join(" ")} />
       <div className="fullscreen__bar">
         <div className="row row--between">
           <div style={{ opacity: 0.95 }}>

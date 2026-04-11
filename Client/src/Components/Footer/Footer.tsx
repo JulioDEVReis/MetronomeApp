@@ -3,7 +3,7 @@ import './Footer.css'
 const Footer = () => {
   return (
     <footer className="footer">
-      <span>Feito para shows: BPM + playlists + metronomo</span>
+      <span>Dados no dispositivo — exporta JSON ou CSV para cópia de segurança</span>
     </footer>
   )
 }

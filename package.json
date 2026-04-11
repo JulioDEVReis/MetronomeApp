@@ -1,7 +1,0 @@
-{
-  "name": "metronome-app",
-  "private": true,
-  "scripts": {
-    "vercel-build": "cd Server && npx prisma generate && npx prisma migrate deploy && cd ../Client && npm run build"
-  }
-}
