@@ -31,6 +31,11 @@ Na Vercel, o frontend e as rotas `/api/*` podem ficar **no mesmo domínio**:
 
 Cria o repositório, faz push, importa na Vercel e liga o **Postgres** ao projeto antes de confiar no primeiro build com migrações.
 
+### Erros comuns no deploy (Vercel)
+
+- **`prisma: command not found` / `Cannot find module 'prisma'`** — na Vercel o `npm install` corre muitas vezes em modo produção e **não instala `devDependencies`**. Neste repo o `prisma` está em **`dependencies`** do `Server` e o `installCommand` usa **`--include=dev`** para o `Client` (Vite/TypeScript).
+- **`Environment variable not found: DATABASE_URL`** ou **falha de ligação (P1001)** — liga **Vercel Postgres** (ou define `DATABASE_URL` manualmente) no projeto **e** garante que está disponível para **Production** (e Preview, se usares). O `vercel-build` corre `prisma migrate deploy`, que precisa de aceder à base durante o build.
+
 ## Desenvolvimento local
 
 ### 1) PostgreSQL com Docker
