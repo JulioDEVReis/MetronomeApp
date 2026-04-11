@@ -11,7 +11,6 @@ Metrônomo para shows: músicas (BPM), playlists e player. **Sem servidor nem ba
 ## Desenvolvimento
 
 ```bash
-cd Client
 npm install
 npm run dev
 ```
