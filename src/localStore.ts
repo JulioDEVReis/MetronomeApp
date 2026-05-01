@@ -2,6 +2,7 @@ export type Song = {
   id: string
   name: string
   bpm: number
+  note: string
 }
 
 export type PlaylistItem = {
@@ -52,6 +53,7 @@ export function loadData(): AppData {
         id: String(s.id ?? newId()),
         name: String(s.name ?? ""),
         bpm: Number.isFinite(Number(s.bpm)) ? Math.trunc(Number(s.bpm)) : 120,
+        note: String(s.note ?? ""),
       })),
       playlists: parsed.playlists.map((p) => ({
         id: String(p.id ?? newId()),
@@ -92,7 +94,7 @@ export function exportJsonBlob(data: AppData): Blob {
 }
 
 export function exportSongsCsv(songs: Song[]): Blob {
-  const lines = ["Nome;BPM", ...songs.map((s) => `${escapeCsv(s.name)};${s.bpm}`)]
+  const lines = ["Nome;BPM;Nota", ...songs.map((s) => `${escapeCsv(s.name)};${s.bpm};${escapeCsv(s.note)}`)]
   const body = "\uFEFF" + lines.join("\n")
   return new Blob([body], { type: "text/csv;charset=utf-8" })
 }
@@ -113,6 +115,7 @@ export function parseImportedJson(text: string): AppData {
       id: String(s.id ?? newId()),
       name: String(s.name ?? "").trim(),
       bpm: clampBpm(Number(s.bpm)),
+      note: String(s.note ?? "").trim(),
     })),
     playlists: parsed.playlists.map((p) => ({
       id: String(p.id ?? newId()),
@@ -149,8 +152,9 @@ export function parseSongsCsv(text: string): Song[] {
     if (parts.length < 2) continue
     const name = parts[0]!.trim().replace(/^"|"$/g, "").replace(/""/g, '"')
     const bpm = clampBpm(Number(parts[1]!.replace(",", ".")))
+    const note = parts.length > 2 ? parts[2]!.trim().replace(/^"|"$/g, "").replace(/""/g, '"') : ""
     if (!name) continue
-    out.push({ id: newId(), name, bpm })
+    out.push({ id: newId(), name, bpm, note })
   }
   return out
 }
@@ -163,3 +167,5 @@ export function downloadBlob(blob: Blob, filename: string) {
   a.click()
   URL.revokeObjectURL(url)
 }
+
+export const MAX_NOTE_LENGTH = 200

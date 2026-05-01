@@ -18,3 +18,9 @@ npm run dev
 ## Nota
 
 Os dados **não** sincronizam entre dispositivos sozinhos: usa **Exportar JSON** noutro telemóvel ou após limpar dados do browser.
+
+
+## Falta ainda
+- Colocar os botões de avanço e retrocesso maiores quando em tela cheia
+- Colocar Notas que serão exibidas na tela cheia (colocar fonte no tamanho que de para ler)
+- Trocar o JSON por PostgreS e ver se funciona na Vercel ou então colocar a exportação e importação em uma nova janela
