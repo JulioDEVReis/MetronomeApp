@@ -6,17 +6,22 @@ type MusicasProps = {
   songs: Song[]
   onAddSong: (name: string, bpm: number, note: string) => void
   onDeleteSong: (id: string) => void
+  onUpdateSong: (id: string, name: string, bpm: number, note: string) => void
 }
 
 function clampInt(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, Math.trunc(n)))
 }
 
-const Musicas = ({ songs, onAddSong, onDeleteSong }: MusicasProps) => {
+const Musicas = ({ songs, onAddSong, onDeleteSong, onUpdateSong }: MusicasProps) => {
   const [songName, setSongName] = useState("")
   const [songBpm, setSongBpm] = useState(120)
   const [songNote, setSongNote] = useState("")
   const [error, setError] = useState("")
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editName, setEditName] = useState("")
+  const [editBpm, setEditBpm] = useState(120)
+  const [editNote, setEditNote] = useState("")
 
   function handleAddSong() {
     setError("")
@@ -32,6 +37,39 @@ const Musicas = ({ songs, onAddSong, onDeleteSong }: MusicasProps) => {
     setSongName("")
     setSongBpm(120)
     setSongNote("")
+  }
+
+  function startEdit(song: Song) {
+    setEditingId(song.id)
+    setEditName(song.name)
+    setEditBpm(song.bpm)
+    setEditNote(song.note)
+    setError("")
+  }
+
+  function handleCancelEdit() {
+    setEditingId(null)
+    setEditName("")
+    setEditBpm(120)
+    setEditNote("")
+  }
+
+  function handleUpdateSong() {
+    setError("")
+    const name = editName.trim()
+    if (!name) {
+      setError("O nome não pode estar vazio.")
+      return
+    }
+    const lowerName = name.toLowerCase()
+    if (songs.some((s) => s.id !== editingId && s.name.toLowerCase() === lowerName)) {
+      setError("Já existe uma música com esse nome.")
+      return
+    }
+    const bpm = clampInt(Number(editBpm), 20, 300)
+    const note = editNote.trim()
+    onUpdateSong(editingId!, name, bpm, note)
+    handleCancelEdit()
   }
 
   return (
@@ -75,24 +113,81 @@ const Musicas = ({ songs, onAddSong, onDeleteSong }: MusicasProps) => {
       </div>
 
       <div className="list">
-        {songs.map((s) => (
-          <div className="listItem" key={s.id}>
-            <div>
-              <div style={{ fontWeight: 700 }}>{s.name}</div>
-              <div className="mono" style={{ opacity: 0.8 }}>
-                {s.bpm} BPM
-              </div>
-              {s.note && (
-                <div style={{ marginTop: 4, opacity: 0.75, fontSize: 13 }}>
-                  📝 {s.note}
-                </div>
+{songs.map((s) => {
+          const isEditing = editingId === s.id
+          return (
+            <div className="listItem" key={s.id}>
+              {isEditing ? (
+                <>
+                  <div style={{ flex: 1 }}>
+                    <div className="field" style={{ marginBottom: 8 }}>
+                      <div className="label">Nome</div>
+                      <input 
+                        value={editName} 
+                        onChange={(e) => setEditName(e.target.value)} 
+                        placeholder="Nome da música" 
+                        autoFocus 
+                      />
+                    </div>
+                    <div className="row" style={{ gap: 12 }}>
+                      <div className="field" style={{ width: 100 }}>
+                        <div className="label">BPM</div>
+                        <input
+                          value={editBpm}
+                          onChange={(e) => setEditBpm(Number(e.target.value))}
+                          type="number"
+                          min={20}
+                          max={300}
+                        />
+                      </div>
+                      <div className="field" style={{ flex: 1 }}>
+                        <div className="label">Nota</div>
+                        <input
+                          value={editNote}
+                          onChange={(e) => setEditNote(e.target.value.slice(0, MAX_NOTE_LENGTH))}
+                          placeholder="Ex: Inicia com guitarra. Cuidado no Solo."
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="row" style={{ gap: 8 }}>
+                    <button className="btn btn--primary btn--small" onClick={handleUpdateSong}>
+                      Salvar
+                    </button>
+                    <button className="btn btn--secondary btn--small" onClick={handleCancelEdit}>
+                      Cancelar
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <div style={{ fontWeight: 700 }}>{s.name}</div>
+                    <div className="mono" style={{ opacity: 0.8 }}>
+                      {s.bpm} BPM
+                    </div>
+                    {s.note && (
+                      <div style={{ marginTop: 4, opacity: 0.75, fontSize: 13 }}>
+                        📝 {s.note}
+                      </div>
+                    )}
+                  </div>
+                  <div className="row" style={{ gap: 8 }}>
+                    <button 
+                      className="btn btn--primary btn--small" 
+                      onClick={() => startEdit(s)}
+                    >
+                      Editar
+                    </button>
+                    <button className="btn btn--danger btn--small" onClick={() => onDeleteSong(s.id)}>
+                      Apagar
+                    </button>
+                  </div>
+                </>
               )}
             </div>
-            <button className="btn btn--danger" onClick={() => onDeleteSong(s.id)}>
-              Apagar
-            </button>
-          </div>
-        ))}
+          )
+        })}
         {!songs.length && <div style={{ opacity: 0.7 }}>Sem músicas ainda.</div>}
       </div>
 

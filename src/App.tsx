@@ -97,6 +97,12 @@ const App = () => {
     )
   }
 
+  function onUpdateSong(id: string, name: string, bpm: number, note: string) {
+    setSongs((s) => s.map((song) => 
+      song.id === id ? { ...song, name, bpm, note } : song
+    ))
+  }
+
   // Playlists handlers
   function onCreatePlaylist(name: string) {
     const id = newId()
@@ -209,6 +215,7 @@ const App = () => {
             songs={songs}
             onAddSong={onAddSong}
             onDeleteSong={onDeleteSong}
+            onUpdateSong={onUpdateSong}
           />
         )
       case "playlists":

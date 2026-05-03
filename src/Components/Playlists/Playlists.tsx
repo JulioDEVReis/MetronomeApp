@@ -153,7 +153,7 @@ const Playlists = ({
                   Selecionar
                 </button>
                 <button className="btn btn--danger" onClick={() => onRemoveItem(selectedPlaylistId, it.id)}>
-                  Remover
+                  X
                 </button>
               </div>
             </div>

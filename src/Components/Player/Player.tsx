@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+import NoSleep from "nosleep.js"
 import type { PlaylistItem } from "../../localStore"
 
 type PlayerProps = {
@@ -89,9 +90,14 @@ const Player = ({
 }: PlayerProps) => {
   const [soundEnabled, setSoundEnabled] = useState(false)
   const [isFullscreenUi, setIsFullscreenUi] = useState(false)
+  const noSleepRef = useRef<NoSleep | null>(null)
 
   const currentBpm = currentItem?.song?.bpm ?? 120
   const { beatOn } = useMetronome(currentBpm, isPlaying && !!currentItem, soundEnabled)
+
+  useEffect(() => {
+    noSleepRef.current = new NoSleep()
+  }, [])
 
   useEffect(() => {
     const onFs = () => {
@@ -122,6 +128,11 @@ const Player = ({
             <div style={{ opacity: 0.95 }}>
               {currentItem ? (
                 <>
+                  {currentItem.song.note && (
+                    <div style={{ fontSize: '20px', marginBottom: 4, opacity: 0.85, fontWeight: 500 }}>
+                      {currentItem.song.note}
+                    </div>
+                  )}
                   <strong>{currentItem.song.name}</strong> • <span className="mono">{currentItem.song.bpm} BPM</span>
                 </>
               ) : (
@@ -129,14 +140,14 @@ const Player = ({
               )}
             </div>
             <div className="row" style={{ justifyContent: "center" }}>
-              <button className="btn" onClick={onPrev} disabled={playerDisabled || currentIndex === 0}>
+              <button className="btn btn--big" onClick={onPrev} disabled={playerDisabled || currentIndex === 0}>
                 ◀
               </button>
               <button className="btn btn--primary btn--big" onClick={onPlayPause} disabled={playerDisabled}>
                 {isPlaying ? "Pausar" : "Play"}
               </button>
               <button
-                className="btn"
+                className="btn btn--big"
                 onClick={onNext}
                 disabled={playerDisabled || currentIndex >= (selectedPlaylistLength - 1)}
               >

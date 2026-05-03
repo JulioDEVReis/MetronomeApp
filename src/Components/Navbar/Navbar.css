@@ -19,8 +19,8 @@
 }
 
 .topbar__title {
-  font-weight: 700;
-  letter-spacing: 0.3px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
 }
 
 .topbar__nav {
@@ -35,7 +35,7 @@
   padding: 6px 12px;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 15px;
   transition: all 0.15s ease;
 }
 

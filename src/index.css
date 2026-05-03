@@ -51,7 +51,7 @@ button, input, select{
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 14px;
+  padding: 12px;
 }
 
 .row{
@@ -106,6 +106,16 @@ input, select{
   border-color: rgba(239,68,68,0.35);
 }
 
+.btn--small{
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.btn--secondary{
+  background: rgba(255,255,255,0.06);
+  border-color: var(--border);
+}
+
 .pill{
   padding: 2px 8px;
   border: 1px solid var(--border);
@@ -127,9 +137,55 @@ input, select{
   border-radius: 12px;
   background: rgba(255,255,255,0.04);
   display:flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
+}
+
+@media (max-width: 600px) {
+  .listItem {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px;
+    gap: 8px;
+  }
+  
+  .listItem > div:first-child {
+    order: -1;
+  }
+  
+  .listItem > div:last-child.row {
+    gap: 6px;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+  }
+  
+  .listItem .btn {
+    padding: 8px 12px;
+    flex: 1;
+    font-size: 14px;
+    min-height: 36px;
+  }
+  
+  .listItem div[style*="fontWeight: 700"] {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 16px;
+  }
+  
+  .listItem .mono {
+    white-space: nowrap;
+    font-size: 14px;
+  }
+  
+  .field {
+    min-width: unset;
+  }
+  
+  input {
+    font-size: 16px;
+  }
 }
 
 .mono{ font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
