@@ -4,9 +4,9 @@ Metrônomo para shows: músicas (BPM), playlists e player. **Sem servidor nem ba
 
 ## Funcionalidades
 
-- **Adicionar e editar** músicas (nome, BPM, nota) independentemente de playlist.
+- **Adicionar, editar e apagar em massa** músicas (nome, BPM, nota) independentemente de playlist.
 - Inclusão de notas para cada música (por exemplo: Musica finaliza com solo na guitarra). Essa nota será apresentada na Playlist e em tela cheia.
-- Criação de Playlists para shows, podendo adicionar musicas a Playlist e editar, alterando as posições das musicas na Playlist.
+- **Criar, editar e eliminar** Playlists para shows, adicionar músicas e alterar posições.
 - Função tela cheia para que toda a tela pisque em verde de acordo com o BPM da musica. Inclui o nome da musica, o BPM e a nota adicionada.
 - Músicas e playlists guardadas localmente.
 - **Exportar / importar JSON** — cópia de segurança completa (ficheiro para guardar na cloud ou enviar por email).
