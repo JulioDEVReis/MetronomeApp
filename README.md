@@ -4,7 +4,7 @@ Metrônomo para shows: músicas (BPM), playlists e player. **Sem servidor nem ba
 
 ## Funcionalidades
 
-- Adição de músicas independentemente de playlist.
+- **Adicionar e editar** músicas (nome, BPM, nota) independentemente de playlist.
 - Inclusão de notas para cada música (por exemplo: Musica finaliza com solo na guitarra). Essa nota será apresentada na Playlist e em tela cheia.
 - Criação de Playlists para shows, podendo adicionar musicas a Playlist e editar, alterando as posições das musicas na Playlist.
 - Função tela cheia para que toda a tela pisque em verde de acordo com o BPM da musica. Inclui o nome da musica, o BPM e a nota adicionada.
@@ -26,4 +26,4 @@ Os dados **não** sincronizam entre dispositivos sozinhos: usa **Exportar JSON**
 
 ## Falta ainda
 
-- Trocar o JSON por PostgreSQL e ver se funciona na Vercel.
+- Deploy (Vercel? PostgreSQL?).
