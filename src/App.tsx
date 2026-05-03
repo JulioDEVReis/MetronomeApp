@@ -46,19 +46,28 @@ const App = () => {
   }, [songs, playlists, hydrated])
 
   const selectedPlaylist: Playlist | null = useMemo(() => {
+    console.log('Resolving playlist', selectedPlaylistId, 'songs count', songs.length, 'playlists count', playlists.length)
     if (!selectedPlaylistId) return null
     const raw = playlists.find((p) => p.id === selectedPlaylistId)
-    if (!raw) return null
+    if (!raw) {
+      console.log('No raw playlist found for id', selectedPlaylistId)
+      return null
+    }
+    console.log('Raw playlist items', raw.items.length, raw.items.slice(0,3))
     const byId = new Map(songs.map((s) => [s.id, s]))
     const items = [...raw.items]
       .sort((a, b) => a.position - b.position)
       .map((it) => {
         const song = byId.get(it.songId)
-        if (!song) return null
+        if (!song) {
+          console.log('Song not found for songId', it.songId)
+          return null
+        }
         return { id: it.id, position: it.position, song } as PlaylistItem
       })
-      .filter(Boolean) as PlaylistItem[]
-    return { id: raw.id, name: raw.name, items }
+      .filter((item): item is PlaylistItem => item !== null)
+    console.log('Resolved items', items.length)
+    return { id: raw.id, name: raw.name, items } as Playlist
   }, [selectedPlaylistId, playlists, songs])
 
   const currentItem: PlaylistItem | null = useMemo(() => {
