@@ -111,20 +111,20 @@ export function parseImportedJson(text: string): AppData {
   }
   return {
     version: 1,
-    songs: parsed.songs.map((s) => ({
+  songs: parsed.songs.map((s) => ({
       id: String(s.id ?? newId()),
       name: String(s.name ?? "").trim(),
       bpm: clampBpm(Number(s.bpm)),
       note: String(s.note ?? "").trim(),
-    })),
+    })).sort((a, b) => a.name.localeCompare(b.name)),
     playlists: parsed.playlists.map((p) => ({
-      id: String(p.id ?? newId()),
+      id: String(p.id),
       name: String(p.name ?? "").trim(),
       items: Array.isArray(p.items)
-        ? p.items.map((it, idx) => ({
-            id: String(it.id ?? newId()),
-            position: idx + 1,
-            songId: String(it.songId ?? ""),
+        ? p.items.map((it) => ({
+            id: String(it.id),
+            position: Number.isFinite(Number(it.position)) ? Math.trunc(Number(it.position)) : it.position ?? 1,
+            songId: String(it.songId),
           }))
         : [],
     })),
