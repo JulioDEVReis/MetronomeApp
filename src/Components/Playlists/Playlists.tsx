@@ -12,6 +12,7 @@ type PlaylistsProps = {
   onRemoveItem: (playlistId: string, itemId: string) => void
   onMoveItem: (playlistId: string, from: number, to: number) => void
   onSelectItem: (index: number) => void
+  onDeletePlaylist: (id: string) => void
 }
 
 const Playlists = ({
@@ -25,6 +26,7 @@ const Playlists = ({
   onRemoveItem,
   onMoveItem,
   onSelectItem,
+  onDeletePlaylist,
 }: PlaylistsProps) => {
   const [playlistName, setPlaylistName] = useState("")
   const [addSongId, setAddSongId] = useState("")
@@ -99,6 +101,14 @@ const Playlists = ({
             ))}
           </select>
         </div>
+        <button 
+          className="btn btn--danger" 
+          onClick={() => onDeletePlaylist(selectedPlaylistId)} 
+          disabled={!selectedPlaylistId}
+          style={{ marginLeft: 12 }}
+        >
+          Eliminar playlist
+        </button>
       </div>
 
       <div className="card" style={{ marginTop: 12, background: "rgba(255,255,255,0.03)" }}>

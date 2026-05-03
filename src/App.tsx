@@ -162,6 +162,21 @@ const App = () => {
     setCurrentIndex(index)
   }
 
+  function onDeletePlaylist(id: string) {
+    if (!confirm(`Eliminar playlist "${playlists.find(p => p.id === id)?.name || id}"?`)) return
+    setPlaylists((p) => p.filter((pl) => pl.id !== id))
+    setSelectedPlaylistId("")
+    setCurrentIndex(0)
+    setIsPlaying(false)
+  }
+
+  function onBulkDeleteSongs(ids: string[]) {
+    if (!confirm(`Eliminar ${ids.length} música(s) selecionada(s)?`)) return
+    for (const id of ids) {
+      onDeleteSong(id)
+    }
+  }
+
   // Player handlers
   function onPlayPause() {
     setIsPlaying((p) => !p)
@@ -216,22 +231,24 @@ const App = () => {
             onAddSong={onAddSong}
             onDeleteSong={onDeleteSong}
             onUpdateSong={onUpdateSong}
+            onBulkDeleteSongs={onBulkDeleteSongs}
           />
         )
       case "playlists":
         return (
-          <Playlists
-            songs={songs}
-            playlists={playlists}
-            selectedPlaylistId={selectedPlaylistId}
-            currentIndex={currentIndex}
-            onSelectPlaylist={setSelectedPlaylistId}
-            onCreatePlaylist={onCreatePlaylist}
-            onAddToPlaylist={onAddToPlaylist}
-            onRemoveItem={onRemoveItem}
-            onMoveItem={onMoveItem}
-            onSelectItem={onSelectItem}
-          />
+            <Playlists
+              songs={songs}
+              playlists={playlists}
+              selectedPlaylistId={selectedPlaylistId}
+              currentIndex={currentIndex}
+              onSelectPlaylist={setSelectedPlaylistId}
+              onCreatePlaylist={onCreatePlaylist}
+              onAddToPlaylist={onAddToPlaylist}
+              onRemoveItem={onRemoveItem}
+              onMoveItem={onMoveItem}
+              onSelectItem={onSelectItem}
+              onDeletePlaylist={onDeletePlaylist}
+            />
         )
       case "player":
         return (
@@ -269,6 +286,7 @@ case "home":
               onRemoveItem={onRemoveItem}
               onMoveItem={onMoveItem}
               onSelectItem={onSelectItem}
+              onDeletePlaylist={onDeletePlaylist}
             />
 
             <Player

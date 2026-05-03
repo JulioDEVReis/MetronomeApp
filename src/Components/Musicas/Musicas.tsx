@@ -7,13 +7,14 @@ type MusicasProps = {
   onAddSong: (name: string, bpm: number, note: string) => void
   onDeleteSong: (id: string) => void
   onUpdateSong: (id: string, name: string, bpm: number, note: string) => void
+  onBulkDeleteSongs: (ids: string[]) => void
 }
 
 function clampInt(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, Math.trunc(n)))
 }
 
-const Musicas = ({ songs, onAddSong, onDeleteSong, onUpdateSong }: MusicasProps) => {
+const Musicas = ({ songs, onAddSong, onDeleteSong, onUpdateSong, onBulkDeleteSongs }: MusicasProps) => {
   const [songName, setSongName] = useState("")
   const [songBpm, setSongBpm] = useState(120)
   const [songNote, setSongNote] = useState("")
@@ -22,6 +23,7 @@ const Musicas = ({ songs, onAddSong, onDeleteSong, onUpdateSong }: MusicasProps)
   const [editName, setEditName] = useState("")
   const [editBpm, setEditBpm] = useState(120)
   const [editNote, setEditNote] = useState("")
+  const [selectedSongIds, setSelectedSongIds] = useState(new Set<string>())
 
   function handleAddSong() {
     setError("")
@@ -70,6 +72,24 @@ const Musicas = ({ songs, onAddSong, onDeleteSong, onUpdateSong }: MusicasProps)
     const note = editNote.trim()
     onUpdateSong(editingId!, name, bpm, note)
     handleCancelEdit()
+  }
+
+  function toggleSongSelection(id: string) {
+    setSelectedSongIds((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(id)) {
+        newSet.delete(id)
+      } else {
+        newSet.add(id)
+      }
+      return newSet
+    })
+  }
+
+  function handleBulkDelete() {
+    if (selectedSongIds.size === 0) return
+    onBulkDeleteSongs(Array.from(selectedSongIds))
+    setSelectedSongIds(new Set())
   }
 
   return (
@@ -161,16 +181,25 @@ const Musicas = ({ songs, onAddSong, onDeleteSong, onUpdateSong }: MusicasProps)
                 </>
               ) : (
                 <>
-                  <div>
-                    <div style={{ fontWeight: 700 }}>{s.name}</div>
-                    <div className="mono" style={{ opacity: 0.8 }}>
-                      {s.bpm} BPM
-                    </div>
-                    {s.note && (
-                      <div style={{ marginTop: 4, opacity: 0.75, fontSize: 13 }}>
-                        📝 {s.note}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                    <label className="checkbox" style={{ marginRight: 12 }}>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedSongIds.has(s.id)}
+                        onChange={() => toggleSongSelection(s.id)}
+                      />
+                    </label>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 700 }}>{s.name}</div>
+                      <div className="mono" style={{ opacity: 0.8 }}>
+                        {s.bpm} BPM
                       </div>
-                    )}
+                      {s.note && (
+                        <div style={{ marginTop: 4, opacity: 0.75, fontSize: 13 }}>
+                          📝 {s.note}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="row" style={{ gap: 8 }}>
                     <button 
@@ -189,6 +218,13 @@ const Musicas = ({ songs, onAddSong, onDeleteSong, onUpdateSong }: MusicasProps)
           )
         })}
         {!songs.length && <div style={{ opacity: 0.7 }}>Sem músicas ainda.</div>}
+        {selectedSongIds.size > 0 && (
+          <div className="row" style={{ marginTop: 12, justifyContent: 'flex-end' }}>
+            <button className="btn btn--danger" onClick={handleBulkDelete}>
+              Apagar {selectedSongIds.size} selecionada(s)
+            </button>
+          </div>
+        )}
       </div>
 
       {!!error && <div className="error" style={{ marginTop: 10 }}>{error}</div>}
