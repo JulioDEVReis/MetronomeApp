@@ -10,6 +10,7 @@ type PlayerProps = {
   onPlayPause: () => void
   onPrev: () => void
   onNext: () => void
+  onSaveBpm: (songId: string, bpm: number) => void
 }
 
 function useMetronome(bpm: number, enabled: boolean, soundEnabled: boolean) {
@@ -68,6 +69,13 @@ function useMetronome(bpm: number, enabled: boolean, soundEnabled: boolean) {
   return { beatOn }
 }
 
+const MIN_BPM = 20
+const MAX_BPM = 300
+
+function clampBpm(n: number) {
+  return Math.max(MIN_BPM, Math.min(MAX_BPM, n))
+}
+
 async function safeFullscreenEnter() {
   const el = document.documentElement
   if (document.fullscreenElement) return
@@ -87,13 +95,33 @@ const Player = ({
   onPlayPause,
   onPrev,
   onNext,
+  onSaveBpm,
 }: PlayerProps) => {
   const [soundEnabled, setSoundEnabled] = useState(false)
   const [isFullscreenUi, setIsFullscreenUi] = useState(false)
+  const [bpmOverride, setBpmOverride] = useState<number | null>(null)
   const noSleepRef = useRef<NoSleep | null>(null)
 
-  const currentBpm = currentItem?.song?.bpm ?? 120
+  const savedBpm = currentItem?.song?.bpm ?? 120
+  const currentBpm = bpmOverride ?? savedBpm
+  const bpmAdjusted = bpmOverride !== null && bpmOverride !== savedBpm
   const { beatOn } = useMetronome(currentBpm, isPlaying && !!currentItem, soundEnabled)
+
+  // BPM adjustments only affect live playback, never the saved song
+  useEffect(() => {
+    setBpmOverride(null)
+  }, [currentItem?.song?.id])
+
+  function adjustBpm(delta: number) {
+    if (!currentItem) return
+    setBpmOverride((prev) => clampBpm((prev ?? savedBpm) + delta))
+  }
+
+  function saveBpm() {
+    if (!currentItem || !bpmAdjusted) return
+    onSaveBpm(currentItem.song.id, currentBpm)
+    setBpmOverride(null)
+  }
 
   useEffect(() => {
     noSleepRef.current = new NoSleep()
@@ -133,7 +161,15 @@ const Player = ({
                       {currentItem.song.note}
                     </div>
                   )}
-                  <strong>{currentItem.song.name}</strong> • <span className="mono">{currentItem.song.bpm} BPM</span>
+                  <strong>{currentItem.song.name}</strong> •{" "}
+                  <span className="mono">
+                    {currentBpm} BPM{bpmAdjusted ? " (ajustado)" : ""}
+                  </span>
+                  {bpmAdjusted && (
+                    <button className="btn btn--small btn--primary" style={{ marginLeft: 8 }} onClick={saveBpm}>
+                      Salvar BPM
+                    </button>
+                  )}
                 </>
               ) : (
                 "Sem música selecionada"
@@ -143,8 +179,24 @@ const Player = ({
               <button className="btn btn--big" onClick={onPrev} disabled={playerDisabled || currentIndex === 0}>
                 ◀
               </button>
+              <button
+                className="btn btn--bpm"
+                onClick={() => adjustBpm(-1)}
+                disabled={playerDisabled || currentBpm <= MIN_BPM}
+                aria-label="Diminuir BPM"
+              >
+                −
+              </button>
               <button className="btn btn--primary btn--big" onClick={onPlayPause} disabled={playerDisabled}>
                 {isPlaying ? "Pausar" : "Play"}
+              </button>
+              <button
+                className="btn btn--bpm"
+                onClick={() => adjustBpm(1)}
+                disabled={playerDisabled || currentBpm >= MAX_BPM}
+                aria-label="Aumentar BPM"
+              >
+                +
               </button>
               <button
                 className="btn btn--big"
@@ -171,7 +223,15 @@ const Player = ({
           <div style={{ opacity: 0.75, marginTop: 2 }}>
             {currentItem ? (
               <>
-                <strong>{currentItem.song.name}</strong> • <span className="mono">{currentItem.song.bpm} BPM</span>
+                <strong>{currentItem.song.name}</strong> •{" "}
+                <span className="mono">
+                  {currentBpm} BPM{bpmAdjusted ? " (ajustado)" : ""}
+                </span>
+                {bpmAdjusted && (
+                  <button className="btn btn--small btn--primary" style={{ marginLeft: 8 }} onClick={saveBpm}>
+                    Salvar BPM
+                  </button>
+                )}
               </>
             ) : (
               "Selecione uma playlist e escolha uma música."
@@ -198,11 +258,27 @@ const Player = ({
           ◀ Anterior
         </button>
         <button
+          className="btn btn--bpm"
+          onClick={() => adjustBpm(-1)}
+          disabled={playerDisabled || currentBpm <= MIN_BPM}
+          aria-label="Diminuir BPM"
+        >
+          −
+        </button>
+        <button
           className="btn btn--primary btn--big"
           onClick={onPlayPause}
           disabled={playerDisabled}
         >
           {isPlaying ? "Pausar" : "Play"}
+        </button>
+        <button
+          className="btn btn--bpm"
+          onClick={() => adjustBpm(1)}
+          disabled={playerDisabled || currentBpm >= MAX_BPM}
+          aria-label="Aumentar BPM"
+        >
+          +
         </button>
         <button
           className="btn"

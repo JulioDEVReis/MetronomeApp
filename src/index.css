@@ -195,6 +195,9 @@ input, select{
   display:grid;
   grid-template-columns: 1fr;
   gap: 12px;
+  position: sticky;
+  top: var(--header-h, 64px);
+  z-index: 5;
 }
 
 .beatBox{
@@ -236,6 +239,19 @@ input, select{
   border-radius: 999px;
   min-width: 140px;
   font-weight: 700;
+}
+
+.btn--bpm{
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .fullscreen{

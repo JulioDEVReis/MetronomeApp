@@ -45,6 +45,18 @@ const App = () => {
     saveData(toAppData(songs, playlists))
   }, [songs, playlists, hydrated])
 
+  useEffect(() => {
+    const headerEl = document.querySelector<HTMLElement>(".topbar")
+    if (!headerEl) return
+    const setHeaderHeightVar = () => {
+      document.documentElement.style.setProperty("--header-h", `${headerEl.offsetHeight}px`)
+    }
+    setHeaderHeightVar()
+    const ro = new ResizeObserver(setHeaderHeightVar)
+    ro.observe(headerEl)
+    return () => ro.disconnect()
+  }, [])
+
   const selectedPlaylist: Playlist | null = useMemo(() => {
     console.log('Resolving playlist', selectedPlaylistId, 'songs count', songs.length, 'playlists count', playlists.length)
     if (!selectedPlaylistId) return null
@@ -107,9 +119,13 @@ const App = () => {
   }
 
   function onUpdateSong(id: string, name: string, bpm: number, note: string) {
-    setSongs((s) => s.map((song) => 
+    setSongs((s) => s.map((song) =>
       song.id === id ? { ...song, name, bpm, note } : song
     ))
+  }
+
+  function onSaveBpm(songId: string, bpm: number) {
+    setSongs((s) => s.map((song) => (song.id === songId ? { ...song, bpm } : song)))
   }
 
   // Playlists handlers
@@ -269,6 +285,7 @@ const App = () => {
             onPlayPause={onPlayPause}
             onPrev={onPrev}
             onNext={onNext}
+            onSaveBpm={onSaveBpm}
           />
         )
       case "backup":
@@ -284,6 +301,17 @@ case "home":
       default:
         return (
           <div className="container">
+            <Player
+              currentItem={currentItem}
+              isPlaying={isPlaying}
+              currentIndex={currentIndex}
+              selectedPlaylistLength={selectedPlaylist?.items?.length ?? 0}
+              onPlayPause={onPlayPause}
+              onPrev={onPrev}
+              onNext={onNext}
+              onSaveBpm={onSaveBpm}
+            />
+
             <Playlists
               songs={songs}
               playlists={playlists}
@@ -296,16 +324,6 @@ case "home":
               onMoveItem={onMoveItem}
               onSelectItem={onSelectItem}
               onDeletePlaylist={onDeletePlaylist}
-            />
-
-            <Player
-              currentItem={currentItem}
-              isPlaying={isPlaying}
-              currentIndex={currentIndex}
-              selectedPlaylistLength={selectedPlaylist?.items?.length ?? 0}
-              onPlayPause={onPlayPause}
-              onPrev={onPrev}
-              onNext={onNext}
             />
           </div>
         )
