@@ -239,7 +239,7 @@ input, select{
 .btn--big{
   padding: 14px 18px;
   border-radius: 999px;
-  min-width: 140px;
+  min-width: 100px;
   font-weight: 700;
 }
 
