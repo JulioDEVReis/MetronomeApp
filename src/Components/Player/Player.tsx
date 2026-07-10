@@ -176,7 +176,7 @@ const Player = ({
               )}
             </div>
             <div className="row" style={{ justifyContent: "center" }}>
-              <button className="btn btn--big" onClick={onPrev} disabled={playerDisabled || currentIndex === 0}>
+              <button className="btn" onClick={onPrev} disabled={playerDisabled || currentIndex === 0}>
                 ◀
               </button>
               <button
@@ -199,7 +199,7 @@ const Player = ({
                 +
               </button>
               <button
-                className="btn btn--big"
+                className="btn"
                 onClick={onNext}
                 disabled={playerDisabled || currentIndex >= (selectedPlaylistLength - 1)}
               >
