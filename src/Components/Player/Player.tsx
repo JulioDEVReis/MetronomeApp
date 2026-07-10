@@ -255,7 +255,7 @@ const Player = ({
 
       <div className="controls">
         <button className="btn" onClick={onPrev} disabled={playerDisabled || currentIndex === 0}>
-          ◀ Anterior
+          ◀
         </button>
         <button
           className="btn btn--bpm"
@@ -285,7 +285,7 @@ const Player = ({
           onClick={onNext}
           disabled={playerDisabled || currentIndex >= (selectedPlaylistLength - 1)}
         >
-          Próxima ▶
+          ▶
         </button>
       </div>
     </section>
