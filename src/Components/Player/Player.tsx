@@ -43,12 +43,12 @@ function useMetronome(bpm: number, enabled: boolean, soundEnabled: boolean) {
         osc.type = "square"
         osc.frequency.value = 1000
         gain.gain.setValueAtTime(0.0001, now)
-        gain.gain.exponentialRampToValueAtTime(0.18, now + 0.002)
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.045)
+        gain.gain.exponentialRampToValueAtTime(0.9, now + 0.003)
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09)
         osc.connect(gain)
         gain.connect(ctx.destination)
         osc.start(now)
-        osc.stop(now + 0.05)
+        osc.stop(now + 0.1)
       }
 
       window.setTimeout(() => {
