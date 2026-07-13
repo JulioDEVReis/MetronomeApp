@@ -23,9 +23,9 @@ function toAppData(songs: Song[], playlists: RawPlaylist[]): AppData {
 }
 
 const App = () => {
-  const [songs, setSongs] = useState<Song[]>([])
-  const [playlists, setPlaylists] = useState<RawPlaylist[]>([])
-  const [hydrated, setHydrated] = useState(false)
+  const [initialData] = useState(() => loadData())
+  const [songs, setSongs] = useState<Song[]>(initialData.songs)
+  const [playlists, setPlaylists] = useState<RawPlaylist[]>(initialData.playlists)
 
   const [activeItem, setActiveItem] = useState<NavItem>("home")
 
@@ -34,16 +34,8 @@ const App = () => {
   const [isPlaying, setIsPlaying] = useState(false)
 
   useEffect(() => {
-    const d = loadData()
-    setSongs(d.songs)
-    setPlaylists(d.playlists)
-    setHydrated(true)
-  }, [])
-
-  useEffect(() => {
-    if (!hydrated) return
     saveData(toAppData(songs, playlists))
-  }, [songs, playlists, hydrated])
+  }, [songs, playlists])
 
   useEffect(() => {
     const headerEl = document.querySelector<HTMLElement>(".topbar")
@@ -58,27 +50,18 @@ const App = () => {
   }, [])
 
   const selectedPlaylist: Playlist | null = useMemo(() => {
-    console.log('Resolving playlist', selectedPlaylistId, 'songs count', songs.length, 'playlists count', playlists.length)
     if (!selectedPlaylistId) return null
     const raw = playlists.find((p) => p.id === selectedPlaylistId)
-    if (!raw) {
-      console.log('No raw playlist found for id', selectedPlaylistId)
-      return null
-    }
-    console.log('Raw playlist items', raw.items.length, raw.items.slice(0,3))
+    if (!raw) return null
     const byId = new Map(songs.map((s) => [s.id, s]))
     const items = [...raw.items]
       .sort((a, b) => a.position - b.position)
       .map((it) => {
         const song = byId.get(it.songId)
-        if (!song) {
-          console.log('Song not found for songId', it.songId)
-          return null
-        }
+        if (!song) return null
         return { id: it.id, position: it.position, song } as PlaylistItem
       })
       .filter((item): item is PlaylistItem => item !== null)
-    console.log('Resolved items', items.length)
     return { id: raw.id, name: raw.name, items } as Playlist
   }, [selectedPlaylistId, playlists, songs])
 
@@ -87,15 +70,11 @@ const App = () => {
     return items.length ? items[Math.min(currentIndex, items.length - 1)] : null
   }, [currentIndex, selectedPlaylist])
 
-  useEffect(() => {
-    if (!selectedPlaylistId) {
-      setCurrentIndex(0)
-      setIsPlaying(false)
-      return
-    }
+  function handleSelectPlaylist(id: string) {
+    setSelectedPlaylistId(id)
     setCurrentIndex(0)
     setIsPlaying(false)
-  }, [selectedPlaylistId])
+  }
 
   function setPlaylistById(id: string, fn: (pl: RawPlaylist) => RawPlaylist) {
     setPlaylists((prev) => prev.map((p) => (p.id === id ? fn(p) : p)))
@@ -133,6 +112,8 @@ const App = () => {
     const id = newId()
     setPlaylists((p) => [...p, { id, name, items: [] }])
     setSelectedPlaylistId(id)
+    setCurrentIndex(0)
+    setIsPlaying(false)
   }
 
   function onAddToPlaylist(playlistId: string, songId: string) {
@@ -266,7 +247,7 @@ const App = () => {
               playlists={playlists}
               selectedPlaylistId={selectedPlaylistId}
               currentIndex={currentIndex}
-              onSelectPlaylist={setSelectedPlaylistId}
+              onSelectPlaylist={handleSelectPlaylist}
               onCreatePlaylist={onCreatePlaylist}
               onAddToPlaylist={onAddToPlaylist}
               onRemoveItem={onRemoveItem}
@@ -317,7 +298,7 @@ case "home":
               playlists={playlists}
               selectedPlaylistId={selectedPlaylistId}
               currentIndex={currentIndex}
-              onSelectPlaylist={setSelectedPlaylistId}
+              onSelectPlaylist={handleSelectPlaylist}
               onCreatePlaylist={onCreatePlaylist}
               onAddToPlaylist={onAddToPlaylist}
               onRemoveItem={onRemoveItem}

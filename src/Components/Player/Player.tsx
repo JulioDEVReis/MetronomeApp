@@ -32,21 +32,20 @@ function useMetronome(
   // Read via refs so toggling sound or dragging the volume slider doesn't
   // restart the interval (which would reset the measure's beat count).
   const soundEnabledRef = useRef(soundEnabled)
-  soundEnabledRef.current = soundEnabled
   const volumeRef = useRef(volume)
-  volumeRef.current = volume
+  useEffect(() => {
+    soundEnabledRef.current = soundEnabled
+  }, [soundEnabled])
+  useEffect(() => {
+    volumeRef.current = volume
+  }, [volume])
 
   useEffect(() => {
-    if (!enabled) {
-      setBeatOn(false)
-      setIsAccentBeat(false)
-      return
-    }
+    if (!enabled) return
 
     const intervalMs = Math.round(60000 / Math.max(1, bpm))
     const beatsInMeasure = Math.max(1, Math.round(beatsPerMeasure))
     let alive = true
-    let t: number | undefined
     let beatIndex = 0
 
     const tick = () => {
@@ -56,24 +55,28 @@ function useMetronome(
       setIsAccentBeat(accent)
 
       if (soundEnabledRef.current) {
-        const Ctx = window.AudioContext || (window as any).webkitAudioContext
-        if (!audioRef.current) audioRef.current = new Ctx()
-        const ctx = audioRef.current
-        if (ctx.state === "suspended") void ctx.resume()
+        const AudioContextClass: typeof AudioContext | undefined =
+          window.AudioContext ??
+          (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+        if (AudioContextClass) {
+          if (!audioRef.current) audioRef.current = new AudioContextClass()
+          const ctx = audioRef.current
+          if (ctx.state === "suspended") void ctx.resume()
 
-        const now = ctx.currentTime
-        const osc = ctx.createOscillator()
-        const gain = ctx.createGain()
-        osc.type = "square"
-        osc.frequency.value = accent ? ACCENT_FREQ : BEAT_FREQ
-        const peak = Math.max(0.0001, volumeRef.current * PEAK_GAIN * (accent ? 1 : BEAT_GAIN_RATIO))
-        gain.gain.setValueAtTime(0.0001, now)
-        gain.gain.exponentialRampToValueAtTime(peak, now + 0.003)
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09)
-        osc.connect(gain)
-        gain.connect(ctx.destination)
-        osc.start(now)
-        osc.stop(now + 0.1)
+          const now = ctx.currentTime
+          const osc = ctx.createOscillator()
+          const gain = ctx.createGain()
+          osc.type = "square"
+          osc.frequency.value = accent ? ACCENT_FREQ : BEAT_FREQ
+          const peak = Math.max(0.0001, volumeRef.current * PEAK_GAIN * (accent ? 1 : BEAT_GAIN_RATIO))
+          gain.gain.setValueAtTime(0.0001, now)
+          gain.gain.exponentialRampToValueAtTime(peak, now + 0.003)
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09)
+          osc.connect(gain)
+          gain.connect(ctx.destination)
+          osc.start(now)
+          osc.stop(now + 0.1)
+        }
       }
 
       beatIndex = (beatIndex + 1) % beatsInMeasure
@@ -85,15 +88,15 @@ function useMetronome(
     }
 
     tick()
-    t = window.setInterval(tick, intervalMs)
+    const t = window.setInterval(tick, intervalMs)
 
     return () => {
       alive = false
-      if (t) window.clearInterval(t)
+      window.clearInterval(t)
     }
   }, [bpm, enabled, beatsPerMeasure])
 
-  return { beatOn, isAccentBeat }
+  return { beatOn: enabled && beatOn, isAccentBeat: enabled && isAccentBeat }
 }
 
 const MIN_BPM = 20
@@ -130,8 +133,21 @@ const Player = ({
   const [volume, setVolume] = useState(1)
   const [isFullscreenUi, setIsFullscreenUi] = useState(false)
   const [bpmOverride, setBpmOverride] = useState<number | null>(null)
+  const [lastSongId, setLastSongId] = useState(currentItem?.song?.id)
   const noSleepRef = useRef<NoSleep | null>(null)
   const tapTimestampsRef = useRef<number[]>([])
+
+  // BPM adjustments only affect live playback, never the saved song: reset
+  // them whenever the selected song changes (React-recommended pattern for
+  // adjusting state during render instead of in an effect).
+  if (currentItem?.song?.id !== lastSongId) {
+    setLastSongId(currentItem?.song?.id)
+    setBpmOverride(null)
+  }
+
+  useEffect(() => {
+    tapTimestampsRef.current = []
+  }, [lastSongId])
 
   const savedBpm = currentItem?.song?.bpm ?? 120
   const beatsPerMeasure = currentItem?.song?.beatsPerMeasure ?? 4
@@ -144,12 +160,6 @@ const Player = ({
     volume,
     beatsPerMeasure,
   )
-
-  // BPM adjustments only affect live playback, never the saved song
-  useEffect(() => {
-    setBpmOverride(null)
-    tapTimestampsRef.current = []
-  }, [currentItem?.song?.id])
 
   function adjustBpm(delta: number) {
     if (!currentItem) return

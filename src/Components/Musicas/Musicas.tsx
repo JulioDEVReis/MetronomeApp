@@ -1,6 +1,8 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import type { Song } from "../../localStore"
 import { MAX_NOTE_LENGTH } from "../../localStore"
+
+type SortOption = "none" | "name-asc" | "name-desc" | "bpm-asc" | "bpm-desc"
 
 type MusicasProps = {
   songs: Song[]
@@ -26,6 +28,30 @@ const Musicas = ({ songs, onAddSong, onDeleteSong, onUpdateSong, onBulkDeleteSon
   const [editNote, setEditNote] = useState("")
   const [editBeats, setEditBeats] = useState(4)
   const [selectedSongIds, setSelectedSongIds] = useState(new Set<string>())
+  const [searchQuery, setSearchQuery] = useState("")
+  const [sortBy, setSortBy] = useState<SortOption>("none")
+
+  const visibleSongs = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase()
+    const filtered = query ? songs.filter((s) => s.name.toLowerCase().includes(query)) : songs
+    if (sortBy === "none") return filtered
+    const sorted = [...filtered]
+    switch (sortBy) {
+      case "name-asc":
+        sorted.sort((a, b) => a.name.localeCompare(b.name))
+        break
+      case "name-desc":
+        sorted.sort((a, b) => b.name.localeCompare(a.name))
+        break
+      case "bpm-asc":
+        sorted.sort((a, b) => a.bpm - b.bpm)
+        break
+      case "bpm-desc":
+        sorted.sort((a, b) => b.bpm - a.bpm)
+        break
+    }
+    return sorted
+  }, [songs, searchQuery, sortBy])
 
   function handleAddSong() {
     setError("")
@@ -150,8 +176,29 @@ const Musicas = ({ songs, onAddSong, onDeleteSong, onUpdateSong, onBulkDeleteSon
         </div>
       </div>
 
+      <div className="row" style={{ marginTop: 12 }}>
+        <div className="field" style={{ flex: 1, minWidth: 200 }}>
+          <div className="label">Buscar por nome</div>
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Ex: Sandman"
+          />
+        </div>
+        <div className="field" style={{ width: 200 }}>
+          <div className="label">Ordenar por</div>
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value as SortOption)}>
+            <option value="none">— (padrão)</option>
+            <option value="name-asc">Nome (A-Z)</option>
+            <option value="name-desc">Nome (Z-A)</option>
+            <option value="bpm-asc">BPM (menor-maior)</option>
+            <option value="bpm-desc">BPM (maior-menor)</option>
+          </select>
+        </div>
+      </div>
+
       <div className="list">
-{songs.map((s) => {
+{visibleSongs.map((s) => {
           const isEditing = editingId === s.id
           return (
             <div className="listItem" key={s.id}>
@@ -247,6 +294,9 @@ const Musicas = ({ songs, onAddSong, onDeleteSong, onUpdateSong, onBulkDeleteSon
           )
         })}
         {!songs.length && <div style={{ opacity: 0.7 }}>Sem músicas ainda.</div>}
+        {!!songs.length && !visibleSongs.length && (
+          <div style={{ opacity: 0.7 }}>Nenhuma música encontrada para "{searchQuery}".</div>
+        )}
         {selectedSongIds.size > 0 && (
           <div className="row" style={{ marginTop: 12, justifyContent: 'flex-end' }}>
             <button className="btn btn--danger" onClick={handleBulkDelete}>
