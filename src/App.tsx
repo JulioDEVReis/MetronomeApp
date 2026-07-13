@@ -102,8 +102,8 @@ const App = () => {
   }
 
 // Musicas handlers
-  function onAddSong(name: string, bpm: number, note: string) {
-    setSongs((s) => [...s, { id: newId(), name, bpm, note }])
+  function onAddSong(name: string, bpm: number, note: string, beatsPerMeasure: number) {
+    setSongs((s) => [...s, { id: newId(), name, bpm, note, beatsPerMeasure }])
   }
 
   function onDeleteSong(id: string) {
@@ -118,9 +118,9 @@ const App = () => {
     )
   }
 
-  function onUpdateSong(id: string, name: string, bpm: number, note: string) {
+  function onUpdateSong(id: string, name: string, bpm: number, note: string, beatsPerMeasure: number) {
     setSongs((s) => s.map((song) =>
-      song.id === id ? { ...song, name, bpm, note } : song
+      song.id === id ? { ...song, name, bpm, note, beatsPerMeasure } : song
     ))
   }
 

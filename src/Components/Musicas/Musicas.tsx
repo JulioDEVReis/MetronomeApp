@@ -4,9 +4,9 @@ import { MAX_NOTE_LENGTH } from "../../localStore"
 
 type MusicasProps = {
   songs: Song[]
-  onAddSong: (name: string, bpm: number, note: string) => void
+  onAddSong: (name: string, bpm: number, note: string, beatsPerMeasure: number) => void
   onDeleteSong: (id: string) => void
-  onUpdateSong: (id: string, name: string, bpm: number, note: string) => void
+  onUpdateSong: (id: string, name: string, bpm: number, note: string, beatsPerMeasure: number) => void
   onBulkDeleteSongs: (ids: string[]) => void
 }
 
@@ -18,11 +18,13 @@ const Musicas = ({ songs, onAddSong, onDeleteSong, onUpdateSong, onBulkDeleteSon
   const [songName, setSongName] = useState("")
   const [songBpm, setSongBpm] = useState(120)
   const [songNote, setSongNote] = useState("")
+  const [songBeats, setSongBeats] = useState(4)
   const [error, setError] = useState("")
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState("")
   const [editBpm, setEditBpm] = useState(120)
   const [editNote, setEditNote] = useState("")
+  const [editBeats, setEditBeats] = useState(4)
   const [selectedSongIds, setSelectedSongIds] = useState(new Set<string>())
 
   function handleAddSong() {
@@ -35,10 +37,12 @@ const Musicas = ({ songs, onAddSong, onDeleteSong, onUpdateSong, onBulkDeleteSon
     }
     const bpm = clampInt(Number(songBpm), 20, 300)
     const note = songNote.trim()
-    onAddSong(name, bpm, note)
+    const beatsPerMeasure = clampInt(Number(songBeats), 1, 12)
+    onAddSong(name, bpm, note, beatsPerMeasure)
     setSongName("")
     setSongBpm(120)
     setSongNote("")
+    setSongBeats(4)
   }
 
   function startEdit(song: Song) {
@@ -46,6 +50,7 @@ const Musicas = ({ songs, onAddSong, onDeleteSong, onUpdateSong, onBulkDeleteSon
     setEditName(song.name)
     setEditBpm(song.bpm)
     setEditNote(song.note)
+    setEditBeats(song.beatsPerMeasure)
     setError("")
   }
 
@@ -54,6 +59,7 @@ const Musicas = ({ songs, onAddSong, onDeleteSong, onUpdateSong, onBulkDeleteSon
     setEditName("")
     setEditBpm(120)
     setEditNote("")
+    setEditBeats(4)
   }
 
   function handleUpdateSong() {
@@ -70,7 +76,8 @@ const Musicas = ({ songs, onAddSong, onDeleteSong, onUpdateSong, onBulkDeleteSon
     }
     const bpm = clampInt(Number(editBpm), 20, 300)
     const note = editNote.trim()
-    onUpdateSong(editingId!, name, bpm, note)
+    const beatsPerMeasure = clampInt(Number(editBeats), 1, 12)
+    onUpdateSong(editingId!, name, bpm, note, beatsPerMeasure)
     handleCancelEdit()
   }
 
@@ -112,6 +119,17 @@ const Musicas = ({ songs, onAddSong, onDeleteSong, onUpdateSong, onBulkDeleteSon
             type="number"
             min={20}
             max={300}
+          />
+        </div>
+        <div className="field" style={{ width: 120 }}>
+          <div className="label">Compasso</div>
+          <input
+            value={songBeats}
+            onChange={(e) => setSongBeats(Number(e.target.value))}
+            type="number"
+            min={1}
+            max={12}
+            title="Tempos por compasso (ex: 4 para 4/4, 3 para 3/4)"
           />
         </div>
         <button className="btn btn--primary" onClick={handleAddSong} disabled={!songName.trim()}>
@@ -160,6 +178,17 @@ const Musicas = ({ songs, onAddSong, onDeleteSong, onUpdateSong, onBulkDeleteSon
                           max={300}
                         />
                       </div>
+                      <div className="field" style={{ width: 100 }}>
+                        <div className="label">Compasso</div>
+                        <input
+                          value={editBeats}
+                          onChange={(e) => setEditBeats(Number(e.target.value))}
+                          type="number"
+                          min={1}
+                          max={12}
+                          title="Tempos por compasso (ex: 4 para 4/4, 3 para 3/4)"
+                        />
+                      </div>
                       <div className="field" style={{ flex: 1 }}>
                         <div className="label">Nota</div>
                         <input
@@ -192,7 +221,7 @@ const Musicas = ({ songs, onAddSong, onDeleteSong, onUpdateSong, onBulkDeleteSon
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 700 }}>{s.name}</div>
                       <div className="mono" style={{ opacity: 0.8 }}>
-                        {s.bpm} BPM
+                        {s.bpm} BPM • Compasso {s.beatsPerMeasure}
                       </div>
                       {s.note && (
                         <div style={{ marginTop: 4, opacity: 0.75, fontSize: 13 }}>
