@@ -102,8 +102,11 @@ export function exportSongsCsv(songs: Song[]): Blob {
 }
 
 function escapeCsv(s: string) {
-  if (s.includes(";") || s.includes('"') || s.includes("\n")) return `"${s.replace(/"/g, '""')}"`
-  return s
+  // Neutralize CSV/formula injection: a leading =, +, -, @, tab or CR lets
+  // Excel/Sheets interpret the cell as a formula when opened.
+  const safe = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s
+  if (safe.includes(";") || safe.includes('"') || safe.includes("\n")) return `"${safe.replace(/"/g, '""')}"`
+  return safe
 }
 
 export function parseImportedJson(text: string): AppData {

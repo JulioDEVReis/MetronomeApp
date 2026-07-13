@@ -45,8 +45,8 @@ const Backup = ({ songs, playlists, onImportJson, onImportCsv }: BackupProps) =>
         const text = String(reader.result ?? "")
         const data = parseImportedJson(text)
         onImportJson(data)
-      } catch (err: any) {
-        setError(err?.message ?? "Erro ao importar JSON.")
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Erro ao importar JSON.")
       }
     }
     reader.readAsText(file)
@@ -67,8 +67,8 @@ const Backup = ({ songs, playlists, onImportJson, onImportCsv }: BackupProps) =>
           return
         }
         onImportCsv(imported)
-      } catch (err: any) {
-        setError(err?.message ?? "Erro ao importar CSV.")
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Erro ao importar CSV.")
       }
     }
     reader.readAsText(file)
