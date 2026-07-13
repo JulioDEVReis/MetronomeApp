@@ -13,25 +13,49 @@ type PlayerProps = {
   onSaveBpm: (songId: string, bpm: number) => void
 }
 
-function useMetronome(bpm: number, enabled: boolean, soundEnabled: boolean) {
+const ACCENT_FREQ = 1600
+const BEAT_FREQ = 1000
+const PEAK_GAIN = 0.9
+const BEAT_GAIN_RATIO = 0.65
+
+function useMetronome(
+  bpm: number,
+  enabled: boolean,
+  soundEnabled: boolean,
+  volume: number,
+  beatsPerMeasure: number,
+) {
   const [beatOn, setBeatOn] = useState(false)
+  const [isAccentBeat, setIsAccentBeat] = useState(false)
   const audioRef = useRef<AudioContext | null>(null)
+
+  // Read via refs so toggling sound or dragging the volume slider doesn't
+  // restart the interval (which would reset the measure's beat count).
+  const soundEnabledRef = useRef(soundEnabled)
+  soundEnabledRef.current = soundEnabled
+  const volumeRef = useRef(volume)
+  volumeRef.current = volume
 
   useEffect(() => {
     if (!enabled) {
       setBeatOn(false)
+      setIsAccentBeat(false)
       return
     }
 
     const intervalMs = Math.round(60000 / Math.max(1, bpm))
+    const beatsInMeasure = Math.max(1, Math.round(beatsPerMeasure))
     let alive = true
     let t: number | undefined
+    let beatIndex = 0
 
     const tick = () => {
       if (!alive) return
+      const accent = beatIndex === 0
       setBeatOn(true)
+      setIsAccentBeat(accent)
 
-      if (soundEnabled) {
+      if (soundEnabledRef.current) {
         const Ctx = window.AudioContext || (window as any).webkitAudioContext
         if (!audioRef.current) audioRef.current = new Ctx()
         const ctx = audioRef.current
@@ -41,15 +65,18 @@ function useMetronome(bpm: number, enabled: boolean, soundEnabled: boolean) {
         const osc = ctx.createOscillator()
         const gain = ctx.createGain()
         osc.type = "square"
-        osc.frequency.value = 1000
+        osc.frequency.value = accent ? ACCENT_FREQ : BEAT_FREQ
+        const peak = Math.max(0.0001, volumeRef.current * PEAK_GAIN * (accent ? 1 : BEAT_GAIN_RATIO))
         gain.gain.setValueAtTime(0.0001, now)
-        gain.gain.exponentialRampToValueAtTime(0.9, now + 0.003)
+        gain.gain.exponentialRampToValueAtTime(peak, now + 0.003)
         gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09)
         osc.connect(gain)
         gain.connect(ctx.destination)
         osc.start(now)
         osc.stop(now + 0.1)
       }
+
+      beatIndex = (beatIndex + 1) % beatsInMeasure
 
       window.setTimeout(() => {
         if (!alive) return
@@ -64,13 +91,15 @@ function useMetronome(bpm: number, enabled: boolean, soundEnabled: boolean) {
       alive = false
       if (t) window.clearInterval(t)
     }
-  }, [bpm, enabled, soundEnabled])
+  }, [bpm, enabled, beatsPerMeasure])
 
-  return { beatOn }
+  return { beatOn, isAccentBeat }
 }
 
 const MIN_BPM = 20
 const MAX_BPM = 300
+const TAP_MAX_SAMPLES = 8
+const TAP_RESET_GAP_MS = 2000
 
 function clampBpm(n: number) {
   return Math.max(MIN_BPM, Math.min(MAX_BPM, n))
@@ -98,18 +127,28 @@ const Player = ({
   onSaveBpm,
 }: PlayerProps) => {
   const [soundEnabled, setSoundEnabled] = useState(false)
+  const [volume, setVolume] = useState(1)
   const [isFullscreenUi, setIsFullscreenUi] = useState(false)
   const [bpmOverride, setBpmOverride] = useState<number | null>(null)
   const noSleepRef = useRef<NoSleep | null>(null)
+  const tapTimestampsRef = useRef<number[]>([])
 
   const savedBpm = currentItem?.song?.bpm ?? 120
+  const beatsPerMeasure = currentItem?.song?.beatsPerMeasure ?? 4
   const currentBpm = bpmOverride ?? savedBpm
   const bpmAdjusted = bpmOverride !== null && bpmOverride !== savedBpm
-  const { beatOn } = useMetronome(currentBpm, isPlaying && !!currentItem, soundEnabled)
+  const { beatOn, isAccentBeat } = useMetronome(
+    currentBpm,
+    isPlaying && !!currentItem,
+    soundEnabled,
+    volume,
+    beatsPerMeasure,
+  )
 
   // BPM adjustments only affect live playback, never the saved song
   useEffect(() => {
     setBpmOverride(null)
+    tapTimestampsRef.current = []
   }, [currentItem?.song?.id])
 
   function adjustBpm(delta: number) {
@@ -121,6 +160,23 @@ const Player = ({
     if (!currentItem || !bpmAdjusted) return
     onSaveBpm(currentItem.song.id, currentBpm)
     setBpmOverride(null)
+  }
+
+  function handleTapTempo() {
+    if (!currentItem) return
+    const now = performance.now()
+    const taps = tapTimestampsRef.current
+    if (taps.length && now - taps[taps.length - 1]! > TAP_RESET_GAP_MS) {
+      taps.length = 0
+    }
+    taps.push(now)
+    if (taps.length > TAP_MAX_SAMPLES) taps.shift()
+    if (taps.length < 2) return
+
+    const intervals: number[] = []
+    for (let i = 1; i < taps.length; i++) intervals.push(taps[i]! - taps[i - 1]!)
+    const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length
+    setBpmOverride(clampBpm(Math.round(60000 / avgInterval)))
   }
 
   useEffect(() => {
@@ -150,7 +206,13 @@ const Player = ({
   if (isFullscreenUi) {
     return (
       <div className="fullscreen" role="application" aria-label="Metronomo em tela cheia">
-        <div className={["fullscreen__stage", beatOn ? "fullscreen__stage--on" : ""].join(" ")} />
+        <div
+          className={[
+            "fullscreen__stage",
+            beatOn ? "fullscreen__stage--on" : "",
+            beatOn && isAccentBeat ? "fullscreen__stage--accent" : "",
+          ].join(" ")}
+        />
         <div className="fullscreen__bar">
           <div className="row row--between">
             <div style={{ opacity: 0.95 }}>
@@ -163,7 +225,7 @@ const Player = ({
                   )}
                   <strong>{currentItem.song.name}</strong> •{" "}
                   <span className="mono">
-                    {currentBpm} BPM{bpmAdjusted ? " (ajustado)" : ""}
+                    {currentBpm} BPM{bpmAdjusted ? " (ajustado)" : ""} • Compasso {beatsPerMeasure}
                   </span>
                   {bpmAdjusted && (
                     <button className="btn btn--small btn--primary" style={{ marginLeft: 8 }} onClick={saveBpm}>
@@ -205,6 +267,9 @@ const Player = ({
               >
                 ▶
               </button>
+              <button className="btn" onClick={handleTapTempo} disabled={playerDisabled}>
+                Tap
+              </button>
               <button className="btn" onClick={toggleFullscreen}>
                 Sair
               </button>
@@ -225,7 +290,7 @@ const Player = ({
               <>
                 <strong>{currentItem.song.name}</strong> •{" "}
                 <span className="mono">
-                  {currentBpm} BPM{bpmAdjusted ? " (ajustado)" : ""}
+                  {currentBpm} BPM{bpmAdjusted ? " (ajustado)" : ""} • Compasso {beatsPerMeasure}
                 </span>
                 {bpmAdjusted && (
                   <button className="btn btn--small btn--primary" style={{ marginLeft: 8 }} onClick={saveBpm}>
@@ -243,6 +308,18 @@ const Player = ({
             <input type="checkbox" checked={soundEnabled} onChange={(e) => setSoundEnabled(e.target.checked)} />
             Som
           </label>
+          <label className="row" style={{ gap: 8, opacity: 0.9 }}>
+            <span style={{ fontSize: 13 }}>Volume</span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={Math.round(volume * 100)}
+              onChange={(e) => setVolume(Number(e.target.value) / 100)}
+              disabled={!soundEnabled}
+              aria-label="Volume do metrônomo"
+            />
+          </label>
           <button className="btn" onClick={toggleFullscreen} disabled={playerDisabled}>
             {isFullscreenUi ? "Sair do Fullscreen" : "Fullscreen"}
           </button>
@@ -250,7 +327,13 @@ const Player = ({
       </div>
 
       <div className="beatBox">
-        <div className={["beatBox__inner", beatOn ? "beatBox__inner--on" : ""].join(" ")} />
+        <div
+          className={[
+            "beatBox__inner",
+            beatOn ? "beatBox__inner--on" : "",
+            beatOn && isAccentBeat ? "beatBox__inner--accent" : "",
+          ].join(" ")}
+        />
       </div>
 
       <div className="controls">
@@ -286,6 +369,9 @@ const Player = ({
           disabled={playerDisabled || currentIndex >= (selectedPlaylistLength - 1)}
         >
           ▶
+        </button>
+        <button className="btn" onClick={handleTapTempo} disabled={playerDisabled}>
+          Tap
         </button>
       </div>
     </section>

@@ -3,6 +3,7 @@ export type Song = {
   name: string
   bpm: number
   note: string
+  beatsPerMeasure: number
 }
 
 export type PlaylistItem = {
@@ -54,6 +55,7 @@ export function loadData(): AppData {
         name: String(s.name ?? ""),
         bpm: Number.isFinite(Number(s.bpm)) ? Math.trunc(Number(s.bpm)) : 120,
         note: String(s.note ?? ""),
+        beatsPerMeasure: clampBeats(Number((s as Partial<Song>).beatsPerMeasure)),
       })),
       playlists: parsed.playlists.map((p) => ({
         id: String(p.id ?? newId()),
@@ -116,6 +118,7 @@ export function parseImportedJson(text: string): AppData {
       name: String(s.name ?? "").trim(),
       bpm: clampBpm(Number(s.bpm)),
       note: String(s.note ?? "").trim(),
+      beatsPerMeasure: clampBeats(Number((s as Partial<Song>).beatsPerMeasure)),
     })).sort((a, b) => a.name.localeCompare(b.name)),
     playlists: parsed.playlists.map((p) => ({
       id: String(p.id),
@@ -136,6 +139,11 @@ function clampBpm(n: number) {
   return Math.max(20, Math.min(300, Math.trunc(n)))
 }
 
+function clampBeats(n: number) {
+  if (!Number.isFinite(n)) return 4
+  return Math.max(1, Math.min(12, Math.trunc(n)))
+}
+
 export function parseSongsCsv(text: string): Song[] {
   const lines = text
     .replace(/^\uFEFF/, "")
@@ -154,7 +162,7 @@ export function parseSongsCsv(text: string): Song[] {
     const bpm = clampBpm(Number(parts[1]!.replace(",", ".")))
     const note = parts.length > 2 ? parts[2]!.trim().replace(/^"|"$/g, "").replace(/""/g, '"') : ""
     if (!name) continue
-    out.push({ id: newId(), name, bpm, note })
+    out.push({ id: newId(), name, bpm, note, beatsPerMeasure: 4 })
   }
   return out
 }

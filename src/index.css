@@ -228,6 +228,20 @@ input, select{
   transform: scaleY(1.35);
 }
 
+.beatBox__inner--accent{
+  background: rgba(250,204,21,0.85);
+  border-color: rgba(250,204,21,0.95);
+  transform: scaleY(1.6);
+}
+
+input[type="range"]{
+  background: transparent;
+  border: none;
+  padding: 0;
+  width: 110px;
+  accent-color: var(--accent);
+}
+
 .controls{
   display:flex;
   gap: 10px;
@@ -274,6 +288,10 @@ input, select{
 
 .fullscreen__stage--on{
   background: rgba(34,197,94,0.90);
+}
+
+.fullscreen__stage--accent{
+  background: rgba(250,204,21,0.90);
 }
 
 .fullscreen__bar{
