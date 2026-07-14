@@ -1,23 +1,28 @@
 import { useMemo, useState } from "react"
 import type { Song, Playlist, RawPlaylist, PlaylistItem } from "../../localStore"
+import { FREE_PLAYLIST_ITEM_LIMIT } from "../../lib/limits"
+import UpgradeHint from "../UpgradeHint/UpgradeHint"
 
 type PlaylistsProps = {
   songs: Song[]
   playlists: RawPlaylist[]
+  isPro: boolean
   selectedPlaylistId: string
   currentIndex: number
   onSelectPlaylist: (id: string) => void
   onCreatePlaylist: (name: string) => void
-  onAddToPlaylist: (playlistId: string, songId: string) => void
+  onAddToPlaylist: (playlistId: string, songId: string) => { ok: boolean }
   onRemoveItem: (playlistId: string, itemId: string) => void
   onMoveItem: (playlistId: string, from: number, to: number) => void
   onSelectItem: (index: number) => void
   onDeletePlaylist: (id: string) => void
+  onGoToConta: () => void
 }
 
 const Playlists = ({
   songs,
   playlists,
+  isPro,
   selectedPlaylistId,
   currentIndex,
   onSelectPlaylist,
@@ -27,6 +32,7 @@ const Playlists = ({
   onMoveItem,
   onSelectItem,
   onDeletePlaylist,
+  onGoToConta,
 }: PlaylistsProps) => {
   const [playlistName, setPlaylistName] = useState("")
   const [addSongId, setAddSongId] = useState("")
@@ -65,10 +71,13 @@ const Playlists = ({
     setPlaylistName("")
   }
 
+  const atFreeLimit = !isPro && (selectedPlaylist?.items?.length ?? 0) >= FREE_PLAYLIST_ITEM_LIMIT
+
   function handleAddToPlaylist() {
     if (!selectedPlaylistId || !addSongId) return
     setError("")
-    onAddToPlaylist(selectedPlaylistId, addSongId)
+    const result = onAddToPlaylist(selectedPlaylistId, addSongId)
+    if (!result.ok) return
     setAddSongId("")
   }
 
@@ -114,7 +123,11 @@ const Playlists = ({
       <div className="card" style={{ marginTop: 12, background: "rgba(255,255,255,0.03)" }}>
         <div className="row row--between">
           <strong>Itens</strong>
-          <span className="pill mono">{selectedPlaylist?.items?.length ?? 0}</span>
+          <span className="pill mono">
+            {isPro
+              ? selectedPlaylist?.items?.length ?? 0
+              : `${selectedPlaylist?.items?.length ?? 0}/${FREE_PLAYLIST_ITEM_LIMIT}`}
+          </span>
         </div>
 
         <div className="row" style={{ marginTop: 12 }}>
@@ -129,10 +142,21 @@ const Playlists = ({
               ))}
             </select>
           </div>
-          <button className="btn btn--primary" onClick={handleAddToPlaylist} disabled={!selectedPlaylistId || !addSongId}>
+          <button
+            className="btn btn--primary"
+            onClick={handleAddToPlaylist}
+            disabled={!selectedPlaylistId || !addSongId || atFreeLimit}
+          >
             Adicionar
           </button>
         </div>
+
+        {atFreeLimit && (
+          <UpgradeHint
+            message={`Limite do plano Grátis atingido (${FREE_PLAYLIST_ITEM_LIMIT} itens por playlist).`}
+            onGoToConta={onGoToConta}
+          />
+        )}
 
         <div className="list">
           {(selectedPlaylist?.items ?? []).map((it, idx) => (
