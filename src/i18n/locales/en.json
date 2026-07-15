@@ -86,5 +86,9 @@
   "app": {
     "confirmDeletePlaylist": "Delete playlist \"{{name}}\"?",
     "confirmDeleteSongs": "Delete {{count}} selected song(s)?"
+  },
+  "eqBanner": {
+    "text": "Also mixing live sound? Check out our Equalizer & Effects app.",
+    "cta": "Visit"
   }
 }

@@ -5,6 +5,7 @@ import Musicas from "./Components/Musicas/Musicas"
 import Playlists from "./Components/Playlists/Playlists"
 import Player from "./Components/Player/Player"
 import Backup from "./Components/Backup/Backup"
+import EqBanner from "./Components/EqBanner/EqBanner"
 import {
   type AppData,
   type Playlist,
@@ -318,6 +319,7 @@ case "home":
     <>
       <Navbar activeItem={activeItem} onNavigate={handleNavigate} />
       <main>{renderContent()}</main>
+      <EqBanner />
     </>
   )
 }
