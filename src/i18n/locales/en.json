@@ -3,12 +3,7 @@
     "home": "Home",
     "musicas": "Songs",
     "playlists": "Playlists",
-    "backup": "Backup",
-    "conta": "Account"
-  },
-  "plan": {
-    "free": "Free",
-    "pro": "PRO"
+    "backup": "Backup"
   },
   "player": {
     "title": "Player",
@@ -59,8 +54,7 @@
     "noResultsFor": "No songs found for \"{{query}}\".",
     "deleteSelected": "Delete {{count}} selected",
     "errorDuplicateName": "A song with that name already exists.",
-    "errorEmptyName": "Name can't be empty.",
-    "limitReached": "Free plan limit reached ({{count}} songs)."
+    "errorEmptyName": "Name can't be empty."
   },
   "playlists": {
     "title": "Playlists",
@@ -75,9 +69,7 @@
     "select": "Select",
     "playlistEmpty": "Playlist is empty.",
     "selectPlaylistHint": "Select a playlist to view/edit its items.",
-    "errorDuplicateName": "A playlist with that name already exists.",
-    "limitReached": "Free plan limit reached ({{count}} items per playlist).",
-    "confirmDelete": "Delete playlist \"{{name}}\"?"
+    "errorDuplicateName": "A playlist with that name already exists."
   },
   "backup": {
     "title": "Backup (JSON / Excel CSV)",
@@ -87,44 +79,9 @@
     "importJson": "Import JSON",
     "exportCsv": "Export songs CSV",
     "importCsv": "Import songs CSV",
-    "importResultSkipped": "Imported {{added}} song(s). {{skipped}} left out — Free plan limit reached.",
-    "upgradeSuffix": " Become PRO in the Account tab to import everything.",
-    "importResult": "Imported {{count}} song(s).",
     "errorNoSongsInCsv": "No songs found in the CSV.",
     "errorImportJson": "Error importing JSON.",
     "errorImportCsv": "Error importing CSV."
-  },
-  "conta": {
-    "title": "Account",
-    "notConfigured": "Account and sync are unavailable — missing configuration in this environment. The Free plan keeps working normally, no login required.",
-    "loading": "Loading…",
-    "loginPrompt": "Sign in to unlock your PRO on any device and sync your songs and playlists to the cloud.",
-    "email": "Email",
-    "emailPlaceholder": "you@example.com",
-    "sendMagicLink": "Send sign-in link",
-    "sending": "Sending…",
-    "linkSentMessage": "Check your email — we sent you a link to sign in.",
-    "checkoutCancelled": "Payment cancelled.",
-    "thankYouPro": "Thank you! All tools are unlocked on this and any other device where you sign in.",
-    "becomePro": "Become PRO — €4.99",
-    "openingPayment": "Opening payment…",
-    "verifyPayment": "Verify payment",
-    "syncConflictTitle": "We found data in the cloud and on this device",
-    "syncConflictBody": "The cloud has {{songs}} song(s) and {{playlists}} playlist(s) saved from another device. Do you want to use the cloud data (replaces this device's) or keep the local data (replaces the cloud's)?",
-    "useCloud": "Use cloud data",
-    "keepLocal": "Keep this device's data",
-    "signOut": "Sign out",
-    "sessionExpired": "Session expired — sign in again.",
-    "paymentError": "Could not start the payment.",
-    "sync": {
-      "idle": "Not syncing",
-      "syncing": "Syncing…",
-      "synced": "Synced",
-      "error": "Sync error"
-    }
-  },
-  "upgradeHint": {
-    "cta": "Become PRO — €4.99"
   },
   "app": {
     "confirmDeletePlaylist": "Delete playlist \"{{name}}\"?",

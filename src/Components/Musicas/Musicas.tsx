@@ -2,26 +2,22 @@ import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { Song } from "../../localStore"
 import { MAX_NOTE_LENGTH } from "../../localStore"
-import { FREE_SONG_LIMIT } from "../../lib/limits"
-import UpgradeHint from "../UpgradeHint/UpgradeHint"
 
 type SortOption = "none" | "name-asc" | "name-desc" | "bpm-asc" | "bpm-desc"
 
 type MusicasProps = {
   songs: Song[]
-  isPro: boolean
-  onAddSong: (name: string, bpm: number, note: string, beatsPerMeasure: number) => { ok: boolean }
+  onAddSong: (name: string, bpm: number, note: string, beatsPerMeasure: number) => void
   onDeleteSong: (id: string) => void
   onUpdateSong: (id: string, name: string, bpm: number, note: string, beatsPerMeasure: number) => void
   onBulkDeleteSongs: (ids: string[]) => void
-  onGoToConta: () => void
 }
 
 function clampInt(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, Math.trunc(n)))
 }
 
-const Musicas = ({ songs, isPro, onAddSong, onDeleteSong, onUpdateSong, onBulkDeleteSongs, onGoToConta }: MusicasProps) => {
+const Musicas = ({ songs, onAddSong, onDeleteSong, onUpdateSong, onBulkDeleteSongs }: MusicasProps) => {
   const { t } = useTranslation()
   const [songName, setSongName] = useState("")
   const [songBpm, setSongBpm] = useState(120)
@@ -59,8 +55,6 @@ const Musicas = ({ songs, isPro, onAddSong, onDeleteSong, onUpdateSong, onBulkDe
     return sorted
   }, [songs, searchQuery, sortBy])
 
-  const atFreeLimit = !isPro && songs.length >= FREE_SONG_LIMIT
-
   function handleAddSong() {
     setError("")
     const name = songName.trim()
@@ -72,8 +66,7 @@ const Musicas = ({ songs, isPro, onAddSong, onDeleteSong, onUpdateSong, onBulkDe
     const bpm = clampInt(Number(songBpm), 20, 300)
     const note = songNote.trim()
     const beatsPerMeasure = clampInt(Number(songBeats), 1, 12)
-    const result = onAddSong(name, bpm, note, beatsPerMeasure)
-    if (!result.ok) return
+    onAddSong(name, bpm, note, beatsPerMeasure)
     setSongName("")
     setSongBpm(120)
     setSongNote("")
@@ -138,7 +131,7 @@ const Musicas = ({ songs, isPro, onAddSong, onDeleteSong, onUpdateSong, onBulkDe
     <section className="card">
       <div className="row row--between">
         <strong>{t("musicas.title")}</strong>
-        <span className="pill mono">{isPro ? songs.length : `${songs.length}/${FREE_SONG_LIMIT}`}</span>
+        <span className="pill mono">{songs.length}</span>
       </div>
 
       <div className="row" style={{ marginTop: 12 }}>
@@ -167,17 +160,10 @@ const Musicas = ({ songs, isPro, onAddSong, onDeleteSong, onUpdateSong, onBulkDe
             title={t("musicas.beatsPerMeasureHint")}
           />
         </div>
-        <button className="btn btn--primary" onClick={handleAddSong} disabled={!songName.trim() || atFreeLimit}>
+        <button className="btn btn--primary" onClick={handleAddSong} disabled={!songName.trim()}>
           {t("musicas.add")}
         </button>
       </div>
-
-      {atFreeLimit && (
-        <UpgradeHint
-          message={t("musicas.limitReached", { count: FREE_SONG_LIMIT })}
-          onGoToConta={onGoToConta}
-        />
-      )}
 
       <div className="row" style={{ marginTop: 12 }}>
         <div className="field" style={{ flex: 1 }}>
