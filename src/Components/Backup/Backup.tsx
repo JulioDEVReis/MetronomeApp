@@ -1,4 +1,5 @@
 import { useRef, useState } from "react"
+import { Trans, useTranslation } from "react-i18next"
 import type { AppData, Song, RawPlaylist } from "../../localStore"
 import {
   downloadBlob,
@@ -17,6 +18,7 @@ type BackupProps = {
 }
 
 const Backup = ({ songs, playlists, isPro, onImportJson, onImportCsv }: BackupProps) => {
+  const { t } = useTranslation()
   const [error, setError] = useState("")
   const [info, setInfo] = useState("")
   const importJsonRef = useRef<HTMLInputElement>(null)
@@ -39,11 +41,11 @@ const Backup = ({ songs, playlists, isPro, onImportJson, onImportCsv }: BackupPr
   function reportImportResult(addedCount: number, skippedCount: number) {
     if (skippedCount > 0) {
       setInfo(
-        `Importadas ${addedCount} música(s). ${skippedCount} ficaram de fora — limite do plano Grátis atingido.` +
-          (isPro ? "" : " Torna-te PRO na aba Conta para importar tudo."),
+        t("backup.importResultSkipped", { added: addedCount, skipped: skippedCount }) +
+          (isPro ? "" : t("backup.upgradeSuffix")),
       )
     } else {
-      setInfo(`Importadas ${addedCount} música(s).`)
+      setInfo(t("backup.importResult", { count: addedCount }))
     }
   }
 
@@ -61,7 +63,7 @@ const Backup = ({ songs, playlists, isPro, onImportJson, onImportCsv }: BackupPr
         const { addedCount, skippedCount } = onImportJson(data)
         reportImportResult(addedCount, skippedCount)
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Erro ao importar JSON.")
+        setError(err instanceof Error ? err.message : t("backup.errorImportJson"))
       }
     }
     reader.readAsText(file)
@@ -79,13 +81,13 @@ const Backup = ({ songs, playlists, isPro, onImportJson, onImportCsv }: BackupPr
         const text = String(reader.result ?? "")
         const imported = parseSongsCsv(text)
         if (!imported.length) {
-          setError("Nenhuma música encontrada no CSV.")
+          setError(t("backup.errorNoSongsInCsv"))
           return
         }
         const { addedCount, skippedCount } = onImportCsv(imported)
         reportImportResult(addedCount, skippedCount)
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Erro ao importar CSV.")
+        setError(err instanceof Error ? err.message : t("backup.errorImportCsv"))
       }
     }
     reader.readAsText(file)
@@ -94,20 +96,18 @@ const Backup = ({ songs, playlists, isPro, onImportJson, onImportCsv }: BackupPr
   return (
     <section className="card">
       <div className="row row--between">
-        <strong>Backup (JSON / Excel CSV)</strong>
-        <span className="pill">só neste dispositivo</span>
+        <strong>{t("backup.title")}</strong>
+        <span className="pill">{t("backup.deviceOnly")}</span>
       </div>
       <p style={{ margin: "10px 0 0", opacity: 0.75, fontSize: 13, lineHeight: 1.45 }}>
-        Os dados ficam no telemóvel ou browser (<strong>localStorage</strong>). Exporta um ficheiro para guardar no
-        telemóvel ou na cloud; importa para restaurar ou juntar músicas a partir de uma folha CSV (<code>Nome;BPM</code>
-        , abre no Excel).
+        <Trans i18nKey="backup.description" components={{ strong: <strong />, code: <code /> }} />
       </p>
       <div className="row" style={{ marginTop: 12 }}>
         <button type="button" className="btn btn--primary" onClick={onExportJson}>
-          Exportar JSON
+          {t("backup.exportJson")}
         </button>
         <button type="button" className="btn" onClick={() => importJsonRef.current?.click()}>
-          Importar JSON
+          {t("backup.importJson")}
         </button>
         <input
           ref={importJsonRef}
@@ -117,10 +117,10 @@ const Backup = ({ songs, playlists, isPro, onImportJson, onImportCsv }: BackupPr
           onChange={onImportJsonFile}
         />
         <button type="button" className="btn" onClick={onExportCsv}>
-          Exportar músicas CSV
+          {t("backup.exportCsv")}
         </button>
         <button type="button" className="btn" onClick={() => importCsvRef.current?.click()}>
-          Importar músicas CSV
+          {t("backup.importCsv")}
         </button>
         <input ref={importCsvRef} type="file" accept=".csv,text/csv" style={{ display: "none" }} onChange={onImportCsvFile} />
       </div>

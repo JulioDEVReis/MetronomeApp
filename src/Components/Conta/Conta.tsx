@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 import type { User } from "@supabase/supabase-js"
 import { getSupabase } from "../../lib/supabaseClient"
 import type { RemoteData } from "../../lib/cloudStore"
@@ -24,13 +25,6 @@ type ContaProps = {
 const POLL_INTERVAL_MS = 2500
 const POLL_MAX_ATTEMPTS = 12
 
-const syncStatusLabel: Record<SyncStatus, string> = {
-  idle: "Sem sincronização",
-  syncing: "A sincronizar…",
-  synced: "Sincronizado",
-  error: "Erro ao sincronizar",
-}
-
 const Conta = ({
   configured,
   authLoading,
@@ -46,6 +40,7 @@ const Conta = ({
   onRefreshPro,
   onResolveConflict,
 }: ContaProps) => {
+  const { t } = useTranslation()
   const [email, setEmail] = useState("")
   const [sending, setSending] = useState(false)
   const [linkSent, setLinkSent] = useState(false)
@@ -83,7 +78,7 @@ const Conta = ({
       const { data } = await supabase.auth.getSession()
       const token = data.session?.access_token
       if (!token) {
-        setError("Sessão expirada — inicia sessão novamente.")
+        setError(t("conta.sessionExpired"))
         return
       }
       const res = await fetch("/api/create-checkout-session", {
@@ -94,10 +89,10 @@ const Conta = ({
       if (res.ok && body.url) {
         window.location.href = body.url
       } else {
-        setError(body.error ?? "Não foi possível iniciar o pagamento.")
+        setError(body.error ?? t("conta.paymentError"))
       }
     } catch {
-      setError("Não foi possível iniciar o pagamento.")
+      setError(t("conta.paymentError"))
     } finally {
       setUpgrading(false)
     }
@@ -107,11 +102,10 @@ const Conta = ({
     return (
       <section className="card">
         <div className="row row--between">
-          <strong>Conta</strong>
+          <strong>{t("conta.title")}</strong>
         </div>
         <p style={{ marginTop: 10, opacity: 0.75, fontSize: 13, lineHeight: 1.45 }}>
-          Conta e sincronização indisponíveis — configuração em falta neste ambiente. O plano Grátis continua a
-          funcionar normalmente, sem login.
+          {t("conta.notConfigured")}
         </p>
       </section>
     )
@@ -121,9 +115,9 @@ const Conta = ({
     return (
       <section className="card">
         <div className="row row--between">
-          <strong>Conta</strong>
+          <strong>{t("conta.title")}</strong>
         </div>
-        <p style={{ marginTop: 10, opacity: 0.75 }}>A carregar…</p>
+        <p style={{ marginTop: 10, opacity: 0.75 }}>{t("conta.loading")}</p>
       </section>
     )
   }
@@ -132,16 +126,15 @@ const Conta = ({
     return (
       <section className="card">
         <div className="row row--between">
-          <strong>Conta</strong>
-          <span className="planPill planPill--free">Grátis</span>
+          <strong>{t("conta.title")}</strong>
+          <span className="planPill planPill--free">{t("plan.free")}</span>
         </div>
         <p style={{ marginTop: 10, opacity: 0.75, fontSize: 13, lineHeight: 1.45 }}>
-          Inicia sessão para desbloqueares o teu PRO em qualquer aparelho e sincronizares as tuas músicas e
-          playlists na nuvem.
+          {t("conta.loginPrompt")}
         </p>
         <div className="row" style={{ marginTop: 12 }}>
           <div className="field" style={{ flex: 1, minWidth: 220 }}>
-            <div className="label">Email</div>
+            <div className="label">{t("conta.email")}</div>
             <input
               type="email"
               value={email}
@@ -149,16 +142,16 @@ const Conta = ({
                 setEmail(e.target.value)
                 setLinkSent(false)
               }}
-              placeholder="tu@exemplo.com"
+              placeholder={t("conta.emailPlaceholder")}
             />
           </div>
           <button className="btn btn--primary" onClick={handleSignIn} disabled={!email.trim() || sending}>
-            {sending ? "A enviar…" : "Enviar link de acesso"}
+            {sending ? t("conta.sending") : t("conta.sendMagicLink")}
           </button>
         </div>
         {linkSent && (
           <p style={{ marginTop: 10, opacity: 0.85, fontSize: 13 }}>
-            Verifica o teu email — enviámos um link para iniciares sessão.
+            {t("conta.linkSentMessage")}
           </p>
         )}
         {!!error && <div className="error">{error}</div>}
@@ -169,26 +162,26 @@ const Conta = ({
   return (
     <section className="card">
       <div className="row row--between">
-        <strong>Conta</strong>
+        <strong>{t("conta.title")}</strong>
         <span className={`planPill ${isPro ? "planPill--pro" : "planPill--free"}`}>
-          {proLoading ? "…" : isPro ? "PRO" : "Grátis"}
+          {proLoading ? "…" : isPro ? t("plan.pro") : t("plan.free")}
         </span>
       </div>
       <p style={{ marginTop: 10, opacity: 0.85 }}>{user.email}</p>
 
-      {checkoutCancelled && <p style={{ marginTop: 10, opacity: 0.75, fontSize: 13 }}>Pagamento cancelado.</p>}
+      {checkoutCancelled && <p style={{ marginTop: 10, opacity: 0.75, fontSize: 13 }}>{t("conta.checkoutCancelled")}</p>}
 
       {isPro ? (
         <p style={{ marginTop: 10, opacity: 0.85, fontSize: 13 }}>
-          Obrigado! Todas as ferramentas estão desbloqueadas neste e em qualquer outro aparelho onde inicies sessão.
+          {t("conta.thankYouPro")}
         </p>
       ) : (
         <div className="row" style={{ marginTop: 12, alignItems: "center" }}>
           <button className="btn btn--primary" onClick={handleUpgrade} disabled={upgrading}>
-            {upgrading ? "A abrir pagamento…" : "Tornar-me PRO — €4,99"}
+            {upgrading ? t("conta.openingPayment") : t("conta.becomePro")}
           </button>
           <button className="btn btn--small" onClick={onRefreshPro} disabled={proLoading}>
-            Verificar pagamento
+            {t("conta.verifyPayment")}
           </button>
         </div>
       )}
@@ -197,27 +190,25 @@ const Conta = ({
 
       {conflict && (
         <div className="syncConflict">
-          <strong style={{ fontSize: 13 }}>Encontrámos dados na nuvem e neste aparelho</strong>
+          <strong style={{ fontSize: 13 }}>{t("conta.syncConflictTitle")}</strong>
           <p style={{ marginTop: 6, opacity: 0.8, fontSize: 13 }}>
-            A nuvem tem {conflict.songs.length} música(s) e {conflict.playlists.length} playlist(s) guardadas de
-            outro aparelho. Queres usar os dados da nuvem (substitui os deste aparelho) ou manter os locais
-            (substitui os da nuvem)?
+            {t("conta.syncConflictBody", { songs: conflict.songs.length, playlists: conflict.playlists.length })}
           </p>
           <div className="row" style={{ marginTop: 10 }}>
             <button className="btn btn--primary btn--small" onClick={() => onResolveConflict(true)}>
-              Usar os da nuvem
+              {t("conta.useCloud")}
             </button>
             <button className="btn btn--small" onClick={() => onResolveConflict(false)}>
-              Manter os deste aparelho
+              {t("conta.keepLocal")}
             </button>
           </div>
         </div>
       )}
 
       <div className="row row--between" style={{ marginTop: 12 }}>
-        <span style={{ opacity: 0.7, fontSize: 12 }}>{syncStatusLabel[syncStatus]}</span>
+        <span style={{ opacity: 0.7, fontSize: 12 }}>{t(`conta.sync.${syncStatus}`)}</span>
         <button className="btn btn--small" onClick={onSignOut}>
-          Terminar sessão
+          {t("conta.signOut")}
         </button>
       </div>
     </section>

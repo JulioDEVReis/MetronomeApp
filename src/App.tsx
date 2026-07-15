@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
 import Navbar from "./Components/Navbar/Navbar"
 import Musicas from "./Components/Musicas/Musicas"
 import Playlists from "./Components/Playlists/Playlists"
@@ -28,6 +29,7 @@ function toAppData(songs: Song[], playlists: RawPlaylist[]): AppData {
 }
 
 const App = () => {
+  const { t } = useTranslation()
   const [initialData] = useState(() => loadData())
   const [songs, setSongs] = useState<Song[]>(initialData.songs)
   const [playlists, setPlaylists] = useState<RawPlaylist[]>(initialData.playlists)
@@ -201,7 +203,8 @@ const App = () => {
   }
 
   function onDeletePlaylist(id: string) {
-    if (!confirm(`Eliminar playlist "${playlists.find(p => p.id === id)?.name || id}"?`)) return
+    const name = playlists.find(p => p.id === id)?.name || id
+    if (!confirm(t("app.confirmDeletePlaylist", { name }))) return
     setPlaylists((p) => p.filter((pl) => pl.id !== id))
     setSelectedPlaylistId("")
     setCurrentIndex(0)
@@ -209,7 +212,7 @@ const App = () => {
   }
 
   function onBulkDeleteSongs(ids: string[]) {
-    if (!confirm(`Eliminar ${ids.length} música(s) selecionada(s)?`)) return
+    if (!confirm(t("app.confirmDeleteSongs", { count: ids.length }))) return
     for (const id of ids) {
       onDeleteSong(id)
     }
