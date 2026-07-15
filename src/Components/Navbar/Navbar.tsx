@@ -1,4 +1,6 @@
+import { useTranslation } from 'react-i18next'
 import './Navbar.css'
+import LanguageSwitcher from '../LanguageSwitcher/LanguageSwitcher'
 
 type NavItem = 'home' | 'musicas' | 'playlists' | 'player' | 'backup' | 'conta'
 
@@ -9,12 +11,13 @@ type NavbarProps = {
 }
 
 const Navbar = ({ activeItem, onNavigate, isPro }: NavbarProps) => {
+  const { t } = useTranslation()
   const navItems: { id: NavItem; label: string }[] = [
-    { id: 'home', label: 'Home' },
-    { id: 'musicas', label: 'Músicas' },
-    { id: 'playlists', label: 'Playlists' },
-    { id: 'backup', label: 'Backup' },
-    { id: 'conta', label: 'Conta' },
+    { id: 'home', label: t('nav.home') },
+    { id: 'musicas', label: t('nav.musicas') },
+    { id: 'playlists', label: t('nav.playlists') },
+    { id: 'backup', label: t('nav.backup') },
+    { id: 'conta', label: t('nav.conta') },
   ]
 
   return (
@@ -22,7 +25,7 @@ const Navbar = ({ activeItem, onNavigate, isPro }: NavbarProps) => {
       <div className="topbar__left">
         <div className="topbar__title">MetronomeApp</div>
         <span className={`planPill ${isPro ? 'planPill--pro' : 'planPill--free'}`}>
-          {isPro ? 'PRO' : 'Grátis'}
+          {isPro ? t('plan.pro') : t('plan.free')}
         </span>
       </div>
       <nav className="topbar__nav">
@@ -36,6 +39,7 @@ const Navbar = ({ activeItem, onNavigate, isPro }: NavbarProps) => {
           </button>
         ))}
       </nav>
+      <LanguageSwitcher />
     </header>
   )
 }

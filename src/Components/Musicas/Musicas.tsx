@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
 import type { Song } from "../../localStore"
 import { MAX_NOTE_LENGTH } from "../../localStore"
 import { FREE_SONG_LIMIT } from "../../lib/limits"
@@ -21,6 +22,7 @@ function clampInt(n: number, min: number, max: number) {
 }
 
 const Musicas = ({ songs, isPro, onAddSong, onDeleteSong, onUpdateSong, onBulkDeleteSongs, onGoToConta }: MusicasProps) => {
+  const { t } = useTranslation()
   const [songName, setSongName] = useState("")
   const [songBpm, setSongBpm] = useState(120)
   const [songNote, setSongNote] = useState("")
@@ -64,7 +66,7 @@ const Musicas = ({ songs, isPro, onAddSong, onDeleteSong, onUpdateSong, onBulkDe
     const name = songName.trim()
     if (!name) return
     if (songs.some((s) => s.name.toLowerCase() === name.toLowerCase())) {
-      setError("Já existe uma música com esse nome.")
+      setError(t("musicas.errorDuplicateName"))
       return
     }
     const bpm = clampInt(Number(songBpm), 20, 300)
@@ -99,12 +101,12 @@ const Musicas = ({ songs, isPro, onAddSong, onDeleteSong, onUpdateSong, onBulkDe
     setError("")
     const name = editName.trim()
     if (!name) {
-      setError("O nome não pode estar vazio.")
+      setError(t("musicas.errorEmptyName"))
       return
     }
     const lowerName = name.toLowerCase()
     if (songs.some((s) => s.id !== editingId && s.name.toLowerCase() === lowerName)) {
-      setError("Já existe uma música com esse nome.")
+      setError(t("musicas.errorDuplicateName"))
       return
     }
     const bpm = clampInt(Number(editBpm), 20, 300)
@@ -135,17 +137,17 @@ const Musicas = ({ songs, isPro, onAddSong, onDeleteSong, onUpdateSong, onBulkDe
   return (
     <section className="card">
       <div className="row row--between">
-        <strong>Músicas</strong>
+        <strong>{t("musicas.title")}</strong>
         <span className="pill mono">{isPro ? songs.length : `${songs.length}/${FREE_SONG_LIMIT}`}</span>
       </div>
 
       <div className="row" style={{ marginTop: 12 }}>
         <div className="field" style={{ flex: 1, minWidth: 220 }}>
-          <div className="label">Nome</div>
-          <input value={songName} onChange={(e) => setSongName(e.target.value)} placeholder="Ex: Enter Sandman" />
+          <div className="label">{t("musicas.name")}</div>
+          <input value={songName} onChange={(e) => setSongName(e.target.value)} placeholder={t("musicas.namePlaceholder")} />
         </div>
         <div className="field" style={{ width: 140 }}>
-          <div className="label">BPM</div>
+          <div className="label">{t("musicas.bpm")}</div>
           <input
             value={songBpm}
             onChange={(e) => setSongBpm(Number(e.target.value))}
@@ -155,24 +157,24 @@ const Musicas = ({ songs, isPro, onAddSong, onDeleteSong, onUpdateSong, onBulkDe
           />
         </div>
         <div className="field" style={{ width: 120 }}>
-          <div className="label">Compasso</div>
+          <div className="label">{t("musicas.beatsPerMeasure")}</div>
           <input
             value={songBeats}
             onChange={(e) => setSongBeats(Number(e.target.value))}
             type="number"
             min={1}
             max={12}
-            title="Tempos por compasso (ex: 4 para 4/4, 3 para 3/4)"
+            title={t("musicas.beatsPerMeasureHint")}
           />
         </div>
         <button className="btn btn--primary" onClick={handleAddSong} disabled={!songName.trim() || atFreeLimit}>
-          Adicionar
+          {t("musicas.add")}
         </button>
       </div>
 
       {atFreeLimit && (
         <UpgradeHint
-          message={`Limite do plano Grátis atingido (${FREE_SONG_LIMIT} músicas).`}
+          message={t("musicas.limitReached", { count: FREE_SONG_LIMIT })}
           onGoToConta={onGoToConta}
         />
       )}
@@ -180,33 +182,33 @@ const Musicas = ({ songs, isPro, onAddSong, onDeleteSong, onUpdateSong, onBulkDe
       <div className="row" style={{ marginTop: 12 }}>
         <div className="field" style={{ flex: 1 }}>
           <div className="label">
-            Nota (máx. {MAX_NOTE_LENGTH} caracteres)
+            {t("musicas.noteLabel", { count: MAX_NOTE_LENGTH })}
           </div>
           <input
             value={songNote}
             onChange={(e) => setSongNote(e.target.value.slice(0, MAX_NOTE_LENGTH))}
-            placeholder="Ex: Inicia com guitarra. Cuidado no Solo."
+            placeholder={t("musicas.notePlaceholder")}
           />
         </div>
       </div>
 
       <div className="row" style={{ marginTop: 12 }}>
         <div className="field" style={{ flex: 1, minWidth: 200 }}>
-          <div className="label">Buscar por nome</div>
+          <div className="label">{t("musicas.searchByName")}</div>
           <input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Ex: Sandman"
+            placeholder={t("musicas.searchPlaceholder")}
           />
         </div>
         <div className="field" style={{ width: 200 }}>
-          <div className="label">Ordenar por</div>
+          <div className="label">{t("musicas.sortBy")}</div>
           <select value={sortBy} onChange={(e) => setSortBy(e.target.value as SortOption)}>
-            <option value="none">— (padrão)</option>
-            <option value="name-asc">Nome (A-Z)</option>
-            <option value="name-desc">Nome (Z-A)</option>
-            <option value="bpm-asc">BPM (menor-maior)</option>
-            <option value="bpm-desc">BPM (maior-menor)</option>
+            <option value="none">{t("musicas.sortDefault")}</option>
+            <option value="name-asc">{t("musicas.sortNameAsc")}</option>
+            <option value="name-desc">{t("musicas.sortNameDesc")}</option>
+            <option value="bpm-asc">{t("musicas.sortBpmAsc")}</option>
+            <option value="bpm-desc">{t("musicas.sortBpmDesc")}</option>
           </select>
         </div>
       </div>
@@ -220,17 +222,17 @@ const Musicas = ({ songs, isPro, onAddSong, onDeleteSong, onUpdateSong, onBulkDe
                 <>
                   <div style={{ flex: 1 }}>
                     <div className="field" style={{ marginBottom: 8 }}>
-                      <div className="label">Nome</div>
-                      <input 
-                        value={editName} 
-                        onChange={(e) => setEditName(e.target.value)} 
-                        placeholder="Nome da música" 
-                        autoFocus 
+                      <div className="label">{t("musicas.name")}</div>
+                      <input
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        placeholder={t("musicas.namePlaceholderEdit")}
+                        autoFocus
                       />
                     </div>
                     <div className="row" style={{ gap: 12 }}>
                       <div className="field" style={{ width: 100 }}>
-                        <div className="label">BPM</div>
+                        <div className="label">{t("musicas.bpm")}</div>
                         <input
                           value={editBpm}
                           onChange={(e) => setEditBpm(Number(e.target.value))}
@@ -240,32 +242,32 @@ const Musicas = ({ songs, isPro, onAddSong, onDeleteSong, onUpdateSong, onBulkDe
                         />
                       </div>
                       <div className="field" style={{ width: 100 }}>
-                        <div className="label">Compasso</div>
+                        <div className="label">{t("musicas.beatsPerMeasure")}</div>
                         <input
                           value={editBeats}
                           onChange={(e) => setEditBeats(Number(e.target.value))}
                           type="number"
                           min={1}
                           max={12}
-                          title="Tempos por compasso (ex: 4 para 4/4, 3 para 3/4)"
+                          title={t("musicas.beatsPerMeasureHint")}
                         />
                       </div>
                       <div className="field" style={{ flex: 1 }}>
-                        <div className="label">Nota</div>
+                        <div className="label">{t("musicas.note")}</div>
                         <input
                           value={editNote}
                           onChange={(e) => setEditNote(e.target.value.slice(0, MAX_NOTE_LENGTH))}
-                          placeholder="Ex: Inicia com guitarra. Cuidado no Solo."
+                          placeholder={t("musicas.notePlaceholder")}
                         />
                       </div>
                     </div>
                   </div>
                   <div className="row" style={{ gap: 8 }}>
                     <button className="btn btn--primary btn--small" onClick={handleUpdateSong}>
-                      Salvar
+                      {t("musicas.save")}
                     </button>
                     <button className="btn btn--secondary btn--small" onClick={handleCancelEdit}>
-                      Cancelar
+                      {t("musicas.cancel")}
                     </button>
                   </div>
                 </>
@@ -273,8 +275,8 @@ const Musicas = ({ songs, isPro, onAddSong, onDeleteSong, onUpdateSong, onBulkDe
                 <>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                     <label className="checkbox" style={{ marginRight: 12 }}>
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         checked={selectedSongIds.has(s.id)}
                         onChange={() => toggleSongSelection(s.id)}
                       />
@@ -282,7 +284,7 @@ const Musicas = ({ songs, isPro, onAddSong, onDeleteSong, onUpdateSong, onBulkDe
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 700 }}>{s.name}</div>
                       <div className="mono" style={{ opacity: 0.8 }}>
-                        {s.bpm} BPM • Compasso {s.beatsPerMeasure}
+                        {t("musicas.songSummary", { bpm: s.bpm, count: s.beatsPerMeasure })}
                       </div>
                       {s.note && (
                         <div style={{ marginTop: 4, opacity: 0.75, fontSize: 13 }}>
@@ -292,14 +294,14 @@ const Musicas = ({ songs, isPro, onAddSong, onDeleteSong, onUpdateSong, onBulkDe
                     </div>
                   </div>
                   <div className="row" style={{ gap: 8 }}>
-                    <button 
-                      className="btn btn--primary btn--small" 
+                    <button
+                      className="btn btn--primary btn--small"
                       onClick={() => startEdit(s)}
                     >
-                      Editar
+                      {t("musicas.edit")}
                     </button>
                     <button className="btn btn--danger btn--small" onClick={() => onDeleteSong(s.id)}>
-                      Apagar
+                      {t("musicas.delete")}
                     </button>
                   </div>
                 </>
@@ -307,14 +309,14 @@ const Musicas = ({ songs, isPro, onAddSong, onDeleteSong, onUpdateSong, onBulkDe
             </div>
           )
         })}
-        {!songs.length && <div style={{ opacity: 0.7 }}>Sem músicas ainda.</div>}
+        {!songs.length && <div style={{ opacity: 0.7 }}>{t("musicas.noSongsYet")}</div>}
         {!!songs.length && !visibleSongs.length && (
-          <div style={{ opacity: 0.7 }}>Nenhuma música encontrada para "{searchQuery}".</div>
+          <div style={{ opacity: 0.7 }}>{t("musicas.noResultsFor", { query: searchQuery })}</div>
         )}
         {selectedSongIds.size > 0 && (
           <div className="row" style={{ marginTop: 12, justifyContent: 'flex-end' }}>
             <button className="btn btn--danger" onClick={handleBulkDelete}>
-              Apagar {selectedSongIds.size} selecionada(s)
+              {t("musicas.deleteSelected", { count: selectedSongIds.size })}
             </button>
           </div>
         )}

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+import { useTranslation } from "react-i18next"
 import NoSleep from "nosleep.js"
 import type { PlaylistItem } from "../../localStore"
 
@@ -129,6 +130,7 @@ const Player = ({
   onNext,
   onSaveBpm,
 }: PlayerProps) => {
+  const { t } = useTranslation()
   const [soundEnabled, setSoundEnabled] = useState(false)
   const [volume, setVolume] = useState(1)
   const [isFullscreenUi, setIsFullscreenUi] = useState(false)
@@ -215,7 +217,7 @@ const Player = ({
 
   if (isFullscreenUi) {
     return (
-      <div className="fullscreen" role="application" aria-label="Metronomo em tela cheia">
+      <div className="fullscreen" role="application" aria-label={t("player.title")}>
         <div
           className={[
             "fullscreen__stage",
@@ -235,16 +237,16 @@ const Player = ({
                   )}
                   <strong>{currentItem.song.name}</strong> •{" "}
                   <span className="mono">
-                    {currentBpm} BPM{bpmAdjusted ? " (ajustado)" : ""} • Compasso {beatsPerMeasure}
+                    {currentBpm} {t("player.bpmUnit")}{bpmAdjusted ? t("player.adjustedSuffix") : ""} • {t("player.beatsInline", { count: beatsPerMeasure })}
                   </span>
                   {bpmAdjusted && (
                     <button className="btn btn--small btn--primary" style={{ marginLeft: 8 }} onClick={saveBpm}>
-                      Salvar BPM
+                      {t("player.saveBpm")}
                     </button>
                   )}
                 </>
               ) : (
-                "Sem música selecionada"
+                t("player.noSongSelected")
               )}
             </div>
             <div className="row" style={{ justifyContent: "center" }}>
@@ -255,18 +257,18 @@ const Player = ({
                 className="btn btn--bpm"
                 onClick={() => adjustBpm(-1)}
                 disabled={playerDisabled || currentBpm <= MIN_BPM}
-                aria-label="Diminuir BPM"
+                aria-label={t("player.decreaseBpmAriaLabel")}
               >
                 −
               </button>
               <button className="btn btn--primary btn--big" onClick={onPlayPause} disabled={playerDisabled}>
-                {isPlaying ? "Pausar" : "Play"}
+                {isPlaying ? t("player.pause") : t("player.play")}
               </button>
               <button
                 className="btn btn--bpm"
                 onClick={() => adjustBpm(1)}
                 disabled={playerDisabled || currentBpm >= MAX_BPM}
-                aria-label="Aumentar BPM"
+                aria-label={t("player.increaseBpmAriaLabel")}
               >
                 +
               </button>
@@ -278,10 +280,10 @@ const Player = ({
                 ▶
               </button>
               <button className="btn" onClick={handleTapTempo} disabled={playerDisabled}>
-                Tap
+                {t("player.tap")}
               </button>
               <button className="btn" onClick={toggleFullscreen}>
-                Sair
+                {t("player.exit")}
               </button>
             </div>
           </div>
@@ -294,32 +296,32 @@ const Player = ({
     <section className="card player">
       <div className="row row--between">
         <div>
-          <div style={{ fontWeight: 800, fontSize: 16 }}>Player</div>
+          <div style={{ fontWeight: 800, fontSize: 16 }}>{t("player.title")}</div>
           <div style={{ opacity: 0.75, marginTop: 2 }}>
             {currentItem ? (
               <>
                 <strong>{currentItem.song.name}</strong> •{" "}
                 <span className="mono">
-                  {currentBpm} BPM{bpmAdjusted ? " (ajustado)" : ""} • Compasso {beatsPerMeasure}
+                  {currentBpm} {t("player.bpmUnit")}{bpmAdjusted ? t("player.adjustedSuffix") : ""} • {t("player.beatsInline", { count: beatsPerMeasure })}
                 </span>
                 {bpmAdjusted && (
                   <button className="btn btn--small btn--primary" style={{ marginLeft: 8 }} onClick={saveBpm}>
-                    Salvar BPM
+                    {t("player.saveBpm")}
                   </button>
                 )}
               </>
             ) : (
-              "Selecione uma playlist e escolha uma música."
+              t("player.noPlaylistSelected")
             )}
           </div>
         </div>
         <div className="row">
           <label className="row" style={{ gap: 8, opacity: 0.9 }}>
             <input type="checkbox" checked={soundEnabled} onChange={(e) => setSoundEnabled(e.target.checked)} />
-            Som
+            {t("player.sound")}
           </label>
           <label className="row" style={{ gap: 8, opacity: 0.9 }}>
-            <span style={{ fontSize: 13 }}>Volume</span>
+            <span style={{ fontSize: 13 }}>{t("player.volume")}</span>
             <input
               type="range"
               min={0}
@@ -327,11 +329,11 @@ const Player = ({
               value={Math.round(volume * 100)}
               onChange={(e) => setVolume(Number(e.target.value) / 100)}
               disabled={!soundEnabled}
-              aria-label="Volume do metrônomo"
+              aria-label={t("player.volumeAriaLabel")}
             />
           </label>
           <button className="btn" onClick={toggleFullscreen} disabled={playerDisabled}>
-            {isFullscreenUi ? "Sair do Fullscreen" : "Fullscreen"}
+            {isFullscreenUi ? t("player.exitFullscreen") : t("player.fullscreen")}
           </button>
         </div>
       </div>
@@ -354,7 +356,7 @@ const Player = ({
           className="btn btn--bpm"
           onClick={() => adjustBpm(-1)}
           disabled={playerDisabled || currentBpm <= MIN_BPM}
-          aria-label="Diminuir BPM"
+          aria-label={t("player.decreaseBpmAriaLabel")}
         >
           −
         </button>
@@ -363,13 +365,13 @@ const Player = ({
           onClick={onPlayPause}
           disabled={playerDisabled}
         >
-          {isPlaying ? "Pausar" : "Play"}
+          {isPlaying ? t("player.pause") : t("player.play")}
         </button>
         <button
           className="btn btn--bpm"
           onClick={() => adjustBpm(1)}
           disabled={playerDisabled || currentBpm >= MAX_BPM}
-          aria-label="Aumentar BPM"
+          aria-label={t("player.increaseBpmAriaLabel")}
         >
           +
         </button>
@@ -381,7 +383,7 @@ const Player = ({
           ▶
         </button>
         <button className="btn" onClick={handleTapTempo} disabled={playerDisabled}>
-          Tap
+          {t("player.tap")}
         </button>
       </div>
     </section>

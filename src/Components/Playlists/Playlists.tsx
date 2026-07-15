@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
 import type { Song, Playlist, RawPlaylist, PlaylistItem } from "../../localStore"
 import { FREE_PLAYLIST_ITEM_LIMIT } from "../../lib/limits"
 import UpgradeHint from "../UpgradeHint/UpgradeHint"
@@ -34,6 +35,7 @@ const Playlists = ({
   onDeletePlaylist,
   onGoToConta,
 }: PlaylistsProps) => {
+  const { t } = useTranslation()
   const [playlistName, setPlaylistName] = useState("")
   const [addSongId, setAddSongId] = useState("")
   const [error, setError] = useState("")
@@ -64,7 +66,7 @@ const Playlists = ({
     const name = playlistName.trim()
     if (!name) return
     if (playlists.some((p) => p.name.toLowerCase() === name.toLowerCase())) {
-      setError("Já existe uma playlist com esse nome.")
+      setError(t("playlists.errorDuplicateName"))
       return
     }
     onCreatePlaylist(name)
@@ -84,23 +86,23 @@ const Playlists = ({
   return (
     <section className="card">
       <div className="row row--between">
-        <strong>Playlists</strong>
+        <strong>{t("playlists.title")}</strong>
         <span className="pill mono">{playlistsMeta.length}</span>
       </div>
 
       <div className="row" style={{ marginTop: 12 }}>
         <div className="field" style={{ flex: 1, minWidth: 220 }}>
-          <div className="label">Nova playlist</div>
-          <input value={playlistName} onChange={(e) => setPlaylistName(e.target.value)} placeholder="Ex: Show 12/04" />
+          <div className="label">{t("playlists.newPlaylist")}</div>
+          <input value={playlistName} onChange={(e) => setPlaylistName(e.target.value)} placeholder={t("playlists.newPlaylistPlaceholder")} />
         </div>
         <button className="btn btn--primary" onClick={handleCreatePlaylist} disabled={!playlistName.trim()}>
-          Criar
+          {t("playlists.create")}
         </button>
       </div>
 
       <div className="row" style={{ marginTop: 12 }}>
         <div className="field" style={{ flex: 1, minWidth: 260 }}>
-          <div className="label">Selecionar playlist</div>
+          <div className="label">{t("playlists.selectPlaylist")}</div>
           <select value={selectedPlaylistId} onChange={(e) => onSelectPlaylist(e.target.value)}>
             <option value="">—</option>
             {playlistsMeta.map((p) => (
@@ -110,19 +112,19 @@ const Playlists = ({
             ))}
           </select>
         </div>
-        <button 
-          className="btn btn--danger" 
-          onClick={() => onDeletePlaylist(selectedPlaylistId)} 
+        <button
+          className="btn btn--danger"
+          onClick={() => onDeletePlaylist(selectedPlaylistId)}
           disabled={!selectedPlaylistId}
           style={{ marginLeft: 12 }}
         >
-          Eliminar playlist
+          {t("playlists.deletePlaylist")}
         </button>
       </div>
 
       <div className="card" style={{ marginTop: 12, background: "rgba(255,255,255,0.03)" }}>
         <div className="row row--between">
-          <strong>Itens</strong>
+          <strong>{t("playlists.items")}</strong>
           <span className="pill mono">
             {isPro
               ? selectedPlaylist?.items?.length ?? 0
@@ -132,7 +134,7 @@ const Playlists = ({
 
         <div className="row" style={{ marginTop: 12 }}>
           <div className="field" style={{ flex: 1, minWidth: 240 }}>
-            <div className="label">Adicionar música</div>
+            <div className="label">{t("playlists.addSong")}</div>
             <select value={addSongId} onChange={(e) => setAddSongId(e.target.value)} disabled={!selectedPlaylistId}>
               <option value="">—</option>
               {songs.map((s) => (
@@ -147,13 +149,13 @@ const Playlists = ({
             onClick={handleAddToPlaylist}
             disabled={!selectedPlaylistId || !addSongId || atFreeLimit}
           >
-            Adicionar
+            {t("playlists.add")}
           </button>
         </div>
 
         {atFreeLimit && (
           <UpgradeHint
-            message={`Limite do plano Grátis atingido (${FREE_PLAYLIST_ITEM_LIMIT} itens por playlist).`}
+            message={t("playlists.limitReached", { count: FREE_PLAYLIST_ITEM_LIMIT })}
             onGoToConta={onGoToConta}
           />
         )}
@@ -184,7 +186,7 @@ const Playlists = ({
                   ↓
                 </button>
                 <button className="btn" onClick={() => onSelectItem(idx)} disabled={!selectedPlaylist?.items?.length}>
-                  Selecionar
+                  {t("playlists.select")}
                 </button>
                 <button className="btn btn--danger" onClick={() => onRemoveItem(selectedPlaylistId, it.id)}>
                   X
@@ -192,8 +194,8 @@ const Playlists = ({
               </div>
             </div>
           ))}
-          {selectedPlaylistId && !(selectedPlaylist?.items?.length ?? 0) && <div style={{ opacity: 0.7 }}>Playlist vazia.</div>}
-          {!selectedPlaylistId && <div style={{ opacity: 0.7 }}>Selecione uma playlist para ver/editar os itens.</div>}
+          {selectedPlaylistId && !(selectedPlaylist?.items?.length ?? 0) && <div style={{ opacity: 0.7 }}>{t("playlists.playlistEmpty")}</div>}
+          {!selectedPlaylistId && <div style={{ opacity: 0.7 }}>{t("playlists.selectPlaylistHint")}</div>}
         </div>
       </div>
 
