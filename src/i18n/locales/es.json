@@ -3,12 +3,7 @@
     "home": "Inicio",
     "musicas": "Canciones",
     "playlists": "Playlists",
-    "backup": "Copia de seguridad",
-    "conta": "Cuenta"
-  },
-  "plan": {
-    "free": "Gratis",
-    "pro": "PRO"
+    "backup": "Copia de seguridad"
   },
   "player": {
     "title": "Reproductor",
@@ -59,8 +54,7 @@
     "noResultsFor": "No se encontraron canciones para \"{{query}}\".",
     "deleteSelected": "Eliminar {{count}} seleccionada(s)",
     "errorDuplicateName": "Ya existe una canción con ese nombre.",
-    "errorEmptyName": "El nombre no puede estar vacío.",
-    "limitReached": "Límite del plan Gratis alcanzado ({{count}} canciones)."
+    "errorEmptyName": "El nombre no puede estar vacío."
   },
   "playlists": {
     "title": "Playlists",
@@ -75,9 +69,7 @@
     "select": "Seleccionar",
     "playlistEmpty": "La playlist está vacía.",
     "selectPlaylistHint": "Selecciona una playlist para ver/editar sus elementos.",
-    "errorDuplicateName": "Ya existe una playlist con ese nombre.",
-    "limitReached": "Límite del plan Gratis alcanzado ({{count}} elementos por playlist).",
-    "confirmDelete": "¿Eliminar la playlist \"{{name}}\"?"
+    "errorDuplicateName": "Ya existe una playlist con ese nombre."
   },
   "backup": {
     "title": "Copia de seguridad (JSON / Excel CSV)",
@@ -87,44 +79,9 @@
     "importJson": "Importar JSON",
     "exportCsv": "Exportar canciones CSV",
     "importCsv": "Importar canciones CSV",
-    "importResultSkipped": "Se importaron {{added}} canción(es). {{skipped}} quedaron fuera — límite del plan Gratis alcanzado.",
-    "upgradeSuffix": " Hazte PRO en la pestaña Cuenta para importarlo todo.",
-    "importResult": "Se importaron {{count}} canción(es).",
     "errorNoSongsInCsv": "No se encontraron canciones en el CSV.",
     "errorImportJson": "Error al importar el JSON.",
     "errorImportCsv": "Error al importar el CSV."
-  },
-  "conta": {
-    "title": "Cuenta",
-    "notConfigured": "Cuenta y sincronización no disponibles — falta configuración en este entorno. El plan Gratis sigue funcionando con normalidad, sin necesidad de iniciar sesión.",
-    "loading": "Cargando…",
-    "loginPrompt": "Inicia sesión para desbloquear tu PRO en cualquier dispositivo y sincronizar tus canciones y playlists en la nube.",
-    "email": "Correo electrónico",
-    "emailPlaceholder": "tu@ejemplo.com",
-    "sendMagicLink": "Enviar enlace de acceso",
-    "sending": "Enviando…",
-    "linkSentMessage": "Revisa tu correo — te enviamos un enlace para iniciar sesión.",
-    "checkoutCancelled": "Pago cancelado.",
-    "thankYouPro": "¡Gracias! Todas las herramientas están desbloqueadas en este y en cualquier otro dispositivo donde inicies sesión.",
-    "becomePro": "Hazte PRO — 4,99 €",
-    "openingPayment": "Abriendo el pago…",
-    "verifyPayment": "Verificar pago",
-    "syncConflictTitle": "Encontramos datos en la nube y en este dispositivo",
-    "syncConflictBody": "La nube tiene {{songs}} canción(es) y {{playlists}} playlist(s) guardadas desde otro dispositivo. ¿Quieres usar los datos de la nube (sustituye los de este dispositivo) o mantener los locales (sustituye los de la nube)?",
-    "useCloud": "Usar los datos de la nube",
-    "keepLocal": "Mantener los de este dispositivo",
-    "signOut": "Cerrar sesión",
-    "sessionExpired": "Sesión caducada — inicia sesión de nuevo.",
-    "paymentError": "No se pudo iniciar el pago.",
-    "sync": {
-      "idle": "Sin sincronizar",
-      "syncing": "Sincronizando…",
-      "synced": "Sincronizado",
-      "error": "Error de sincronización"
-    }
-  },
-  "upgradeHint": {
-    "cta": "Hazte PRO — 4,99 €"
   },
   "app": {
     "confirmDeletePlaylist": "¿Eliminar la playlist \"{{name}}\"?",

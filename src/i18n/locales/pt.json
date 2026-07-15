@@ -3,12 +3,7 @@
     "home": "Home",
     "musicas": "Músicas",
     "playlists": "Playlists",
-    "backup": "Backup",
-    "conta": "Conta"
-  },
-  "plan": {
-    "free": "Grátis",
-    "pro": "PRO"
+    "backup": "Backup"
   },
   "player": {
     "title": "Player",
@@ -59,8 +54,7 @@
     "noResultsFor": "Nenhuma música encontrada para \"{{query}}\".",
     "deleteSelected": "Apagar {{count}} selecionada(s)",
     "errorDuplicateName": "Já existe uma música com esse nome.",
-    "errorEmptyName": "O nome não pode estar vazio.",
-    "limitReached": "Limite do plano Grátis atingido ({{count}} músicas)."
+    "errorEmptyName": "O nome não pode estar vazio."
   },
   "playlists": {
     "title": "Playlists",
@@ -75,9 +69,7 @@
     "select": "Selecionar",
     "playlistEmpty": "Playlist vazia.",
     "selectPlaylistHint": "Selecione uma playlist para ver/editar os itens.",
-    "errorDuplicateName": "Já existe uma playlist com esse nome.",
-    "limitReached": "Limite do plano Grátis atingido ({{count}} itens por playlist).",
-    "confirmDelete": "Eliminar playlist \"{{name}}\"?"
+    "errorDuplicateName": "Já existe uma playlist com esse nome."
   },
   "backup": {
     "title": "Backup (JSON / Excel CSV)",
@@ -87,44 +79,9 @@
     "importJson": "Importar JSON",
     "exportCsv": "Exportar músicas CSV",
     "importCsv": "Importar músicas CSV",
-    "importResultSkipped": "Importadas {{added}} música(s). {{skipped}} ficaram de fora — limite do plano Grátis atingido.",
-    "upgradeSuffix": " Torna-te PRO na aba Conta para importar tudo.",
-    "importResult": "Importadas {{count}} música(s).",
     "errorNoSongsInCsv": "Nenhuma música encontrada no CSV.",
     "errorImportJson": "Erro ao importar JSON.",
     "errorImportCsv": "Erro ao importar CSV."
-  },
-  "conta": {
-    "title": "Conta",
-    "notConfigured": "Conta e sincronização indisponíveis — configuração em falta neste ambiente. O plano Grátis continua a funcionar normalmente, sem login.",
-    "loading": "A carregar…",
-    "loginPrompt": "Inicia sessão para desbloqueares o teu PRO em qualquer aparelho e sincronizares as tuas músicas e playlists na nuvem.",
-    "email": "Email",
-    "emailPlaceholder": "tu@exemplo.com",
-    "sendMagicLink": "Enviar link de acesso",
-    "sending": "A enviar…",
-    "linkSentMessage": "Verifica o teu email — enviámos um link para iniciares sessão.",
-    "checkoutCancelled": "Pagamento cancelado.",
-    "thankYouPro": "Obrigado! Todas as ferramentas estão desbloqueadas neste e em qualquer outro aparelho onde inicies sessão.",
-    "becomePro": "Tornar-me PRO — €4,99",
-    "openingPayment": "A abrir pagamento…",
-    "verifyPayment": "Verificar pagamento",
-    "syncConflictTitle": "Encontrámos dados na nuvem e neste aparelho",
-    "syncConflictBody": "A nuvem tem {{songs}} música(s) e {{playlists}} playlist(s) guardadas de outro aparelho. Queres usar os dados da nuvem (substitui os deste aparelho) ou manter os locais (substitui os da nuvem)?",
-    "useCloud": "Usar os da nuvem",
-    "keepLocal": "Manter os deste aparelho",
-    "signOut": "Terminar sessão",
-    "sessionExpired": "Sessão expirada — inicia sessão novamente.",
-    "paymentError": "Não foi possível iniciar o pagamento.",
-    "sync": {
-      "idle": "Sem sincronização",
-      "syncing": "A sincronizar…",
-      "synced": "Sincronizado",
-      "error": "Erro ao sincronizar"
-    }
-  },
-  "upgradeHint": {
-    "cta": "Tornar-me PRO — €4,99"
   },
   "app": {
     "confirmDeletePlaylist": "Eliminar playlist \"{{name}}\"?",

@@ -12,15 +12,13 @@ import {
 type BackupProps = {
   songs: Song[]
   playlists: RawPlaylist[]
-  isPro: boolean
-  onImportJson: (data: AppData) => { addedCount: number; skippedCount: number }
-  onImportCsv: (songs: Song[]) => { addedCount: number; skippedCount: number }
+  onImportJson: (data: AppData) => void
+  onImportCsv: (songs: Song[]) => void
 }
 
-const Backup = ({ songs, playlists, isPro, onImportJson, onImportCsv }: BackupProps) => {
+const Backup = ({ songs, playlists, onImportJson, onImportCsv }: BackupProps) => {
   const { t } = useTranslation()
   const [error, setError] = useState("")
-  const [info, setInfo] = useState("")
   const importJsonRef = useRef<HTMLInputElement>(null)
   const importCsvRef = useRef<HTMLInputElement>(null)
 
@@ -38,30 +36,17 @@ const Backup = ({ songs, playlists, isPro, onImportJson, onImportCsv }: BackupPr
     downloadBlob(exportSongsCsv(songs), "metronome-musicas.csv")
   }
 
-  function reportImportResult(addedCount: number, skippedCount: number) {
-    if (skippedCount > 0) {
-      setInfo(
-        t("backup.importResultSkipped", { added: addedCount, skipped: skippedCount }) +
-          (isPro ? "" : t("backup.upgradeSuffix")),
-      )
-    } else {
-      setInfo(t("backup.importResult", { count: addedCount }))
-    }
-  }
-
   function onImportJsonFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     e.target.value = ""
     if (!file) return
     setError("")
-    setInfo("")
     const reader = new FileReader()
     reader.onload = () => {
       try {
         const text = String(reader.result ?? "")
         const data = parseImportedJson(text)
-        const { addedCount, skippedCount } = onImportJson(data)
-        reportImportResult(addedCount, skippedCount)
+        onImportJson(data)
       } catch (err) {
         setError(err instanceof Error ? err.message : t("backup.errorImportJson"))
       }
@@ -74,7 +59,6 @@ const Backup = ({ songs, playlists, isPro, onImportJson, onImportCsv }: BackupPr
     e.target.value = ""
     if (!file) return
     setError("")
-    setInfo("")
     const reader = new FileReader()
     reader.onload = () => {
       try {
@@ -84,8 +68,7 @@ const Backup = ({ songs, playlists, isPro, onImportJson, onImportCsv }: BackupPr
           setError(t("backup.errorNoSongsInCsv"))
           return
         }
-        const { addedCount, skippedCount } = onImportCsv(imported)
-        reportImportResult(addedCount, skippedCount)
+        onImportCsv(imported)
       } catch (err) {
         setError(err instanceof Error ? err.message : t("backup.errorImportCsv"))
       }
@@ -125,7 +108,6 @@ const Backup = ({ songs, playlists, isPro, onImportJson, onImportCsv }: BackupPr
         <input ref={importCsvRef} type="file" accept=".csv,text/csv" style={{ display: "none" }} onChange={onImportCsvFile} />
       </div>
 
-      {!!info && <p style={{ marginTop: 10, opacity: 0.8, fontSize: 13 }}>{info}</p>}
       {!!error && <div className="error" style={{ marginTop: 10 }}>{error}</div>}
     </section>
   )
